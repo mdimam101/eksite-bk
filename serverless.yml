@@ -1,0 +1,136 @@
+# frameworkVersion: '4'        # ← v4 CLI use করছো, তাই এটা দিন
+
+# org: imamhosen               # ← Serverless Dashboard org (login করলে থাকতে হবে)
+# app: ekosite-api             # ← যে নামে App রাখতে চাও (Dashboard-এ create/sync হবে)
+
+# service: ekosite-api
+
+# provider:
+#   name: aws
+#   runtime: nodejs20.x
+#   region: ${opt:region, 'ap-southeast-1'} 
+#   memorySize: 512
+#   timeout: 15
+#   environment:
+#     NODE_ENV: production
+#     PORT: 8080
+#     # ✅ Mongo + JWT
+#     MONGODB_URI: ${env:MONGODB_URI, ''}
+#     TOKEN_SECRET_KEY: ${env:TOKEN_SECRET_KEY, ''}
+
+#     # ✅ Cloudinary (unsigned upload use-case)
+#     CLOUDINARY_CLOUD_NAME: ${env:CLOUDINARY_CLOUD_NAME, ''}
+#     CLOUDINARY_UPLOAD_PRESET: ${env:CLOUDINARY_UPLOAD_PRESET, ''}
+
+#   httpApi:
+#     cors:false
+#       # allowedOrigins:
+#       #   # 👉 এখানে তোমার আসল origin গুলো বসাও:
+#       #   - https://your-frontend-domain.com
+#       #   # (ডেভ টেস্ট দরকার হলে বাড়াতে পারো—কিন্তু cookies + HTTPS না হলে কাজ করবে না)
+#       #   # - https://staging.your-frontend-domain.com
+#       # allowedHeaders:
+#       #   - Content-Type
+#       #   - Authorization
+#       #   - X-Requested-With
+#       #   - Cookie
+#       # allowedMethods:
+#       #   - GET
+#       #   - POST
+#       #   - PUT
+#       #   - PATCH
+#       #   - DELETE
+#       #   - OPTIONS
+#       # allowCredentials: true
+
+# functions:
+#   api:
+#     handler: api/lambda.handler
+#     events:
+#       - httpApi:
+#           method: ANY
+#           path: /{proxy+}
+
+# plugins:
+#   - serverless-offline
+
+
+# serverless.yml  ✅
+frameworkVersion: '4'
+
+org: imamhosen
+app: ekosite-api
+service: ekosite-api
+
+# provider:
+#   name: aws
+#   runtime: nodejs20.x
+#   region: 'ap-southeast-1'
+#   memorySize: 2048
+#   timeout: 15
+#   environment:
+#     NODE_ENV: production
+#     PORT: 8080
+#     MONGODB_URI: ${env:MONGODB_URI, ''}
+#     TOKEN_SECRET_KEY: ${env:TOKEN_SECRET_KEY, ''}
+#     CLOUDINARY_CLOUD_NAME: ${env:CLOUDINARY_CLOUD_NAME, ''}
+#     CLOUDINARY_UPLOAD_PRESET: ${env:CLOUDINARY_UPLOAD_PRESET, ''}
+
+#   httpApi:
+#     cors:
+#       allowedOrigins:
+#         - https://egtake.com          # ← তোমার আসল ফ্রন্টএন্ড
+#         - https://www.egtake.com      # (যদি লাগে)
+#         # - https://staging.egtake.com
+#       allowedHeaders:
+#         - Content-Type
+#         - Authorization
+#         - X-Requested-With
+#         - Cookie
+#       allowedMethods:
+#         - GET
+#         - POST
+#         - PUT
+#         - PATCH
+#         - DELETE
+#         - OPTIONS
+#       allowCredentials: true
+#       maxAge: 86400
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-southeast-1
+  httpApi:
+    payload: '2.0'   # <-- add this to be explicit
+    cors:
+      allowedOrigins:
+        - https://egtake.com
+        - https://www.egtake.com
+        - https://pyzara.com
+        - https://www.pyzara.com
+        - http://localhost:5173
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - X-Requested-With
+        - Cookie
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allowCredentials: true
+      maxAge: 86400
+
+functions:
+  api:
+    handler: api/lambda.handler
+    events:
+      - httpApi:
+          method: ANY
+          path: /{proxy+}
+
+plugins:
+  - serverless-offline
