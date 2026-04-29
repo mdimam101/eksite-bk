@@ -17,6 +17,7 @@ const orderedItemSchema = new mongoose.Schema({
   productCodeNumber: Number,
   itemStatus: {
     type: String,
+    enum: ["Pending", "Confirmed", "Shipped", "Delivered", "Canceled", "Return"],
     default: "Pending", // Processing, Shipped, Delivered, Return
   },
 });
@@ -61,6 +62,7 @@ const orderSchema = new mongoose.Schema(
 
     status: {
       type: String,
+      enum: ["Pending", "Confirmed", "Shipped", "Delivered", "Canceled", "Return"],
       default: "Pending", // Processing, Shipped, Delivered, Return
     },
   },

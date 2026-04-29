@@ -32,6 +32,7 @@ const OrderModel = require('../models/OrderModel')
 const orderCancelController = require('../controller/users/orderCancelController')
 const orderReturnController = require('../controller/users/orderReturnController')
 const reduceProductStock = require('../controller/products/reduceProductStock')
+const updateOrderStatus = require('../controller/products/updateOrderStatus')
 
 // reviews
 const createReview = require("../controller/reviews/createReview");
@@ -127,6 +128,9 @@ router.get("/all-orders",  getAllOrders);
 
 // userOrder
 router.get("/user-all-ordrs",authToken, getUserOrders)
+
+// Admin can update order or item status from frontend
+router.patch('/admin/orders/:orderId/status', authToken, updateOrderStatus);
 
 router.delete('/cancel/:orderId', authToken, orderCancelController )
 // same controller handles both:
