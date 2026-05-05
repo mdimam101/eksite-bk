@@ -24,6 +24,7 @@
     "libphonenumber-js": "^1.12.13",
     "mongodb": "^6.16.0",
     "mongoose": "^8.15.0",
+    "openai": "^6.36.0",
     "otp-generator": "^4.0.1",
     "serverless-http": "^3.2.0",
     "twilio": "^5.8.0"

@@ -1,36 +1,4 @@
-// const mongoose = require('mongoose')
-// const shippingSchema = new mongoose.Schema({
-//   name: String,
-//   phone: String,
-//   address: String,
-//   district: String,
-//   upazila: String,
-// }, { _id: false }) // no separate _id for nested doc
 
-// const userSchema = new mongoose.Schema({
-//     // ✅ device-based identify (guest user)
-//   deviceId: { type: String, unique: true, sparse: true, index: true },
-//   name: String,
-//   email: {
-//     type: String,
-//     unique: true,
-//     // required: true
-//   },
-//   password: String,
-//   role: String,
-
-//     // ✅ phone-based auth এর জন্য
-//   phone: { type: String, unique: true, sparse: true, index: true },
-//   isPhoneVerified: { type: Boolean, default: false },
-
-//   // ✅ add this
-//   shipping: shippingSchema, // optional: user’s default shipping
-// }, {
-//   timestamps: true
-// })
-
-// const userModel = mongoose.model('user', userSchema)
-// module.exports = userModel
 const mongoose = require('mongoose')
 
 const shippingSchema = new mongoose.Schema({

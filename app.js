@@ -58,6 +58,9 @@ app.use('/api', router);
 // ⬇️ NEW: mount basic tracking routes
 app.use('/api', require('./routes/trackBasic'));
 
+// ⬇️ NEW: AI size recommendation route
+app.use('/api', require('./routes/aiSizeRoute'));
+
 // Health
 app.get('/', (req, res) => res.send('✅ API is live!'));
 
