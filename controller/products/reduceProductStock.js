@@ -37,12 +37,14 @@ const reduceProductStock = async (req, res) => {
     if (isCancelOrder) {
       sizeObj.stock = Math.max(0, sizeObj.stock + quantity);
       product.totalStock = Math.max(0, (product.totalStock || 0) + quantity);
+      product.sold = Math.max(0, (product.sold || 0) - quantity);
 
     } else {
       // Subtract stock
       sizeObj.stock = Math.max(0, sizeObj.stock - quantity);
       // Subtract from totalStock
       product.totalStock = Math.max(0, (product.totalStock || 0) - quantity);
+      product.sold = Math.max(0, (product.sold || 0) + quantity);
 
     }
     
@@ -57,7 +59,8 @@ const reduceProductStock = async (req, res) => {
       data: {
         productId: product._id,
         updatedSizeStock: sizeObj.stock,
-        updatedTotallStock: product.totalStock
+        updatedTotallStock: product.totalStock,
+        sold: product.sold
       }
     });
   } catch (err) {

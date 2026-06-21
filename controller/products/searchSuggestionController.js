@@ -9,6 +9,7 @@ const searchSuggestionController = async (req, res) => {
 
   try {
     const suggestions = await productModel.find({
+      isPublished: true,
       $or: [
         { productName: { $regex: q, $options: "i" } },
         { category: { $regex: q, $options: "i" } },

@@ -40,6 +40,13 @@ const orderSchema = new mongoose.Schema(
     deliveryCharge: Number,
     paymentMethod: String,       // e.g., "COD"
 
+     // User selected premium request during checkout
+    subscriptionRequest: {
+      type: Boolean,
+      default: false,
+    },
+
+
     // Kept for backward compatibility with your current UI payload
     totalAmount: Number,         // will mirror totals.payable
     discount: Number,            // final server-side discount

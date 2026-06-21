@@ -25,10 +25,21 @@ const userSchema = new mongoose.Schema({
 
   password: String,
   role: {
-    type: String,
-    default: "GENERAL",
+  type: String,
+  enum: ["ADMIN", "GENERAL", "PREMIUM", "SUBPENDING"],
+  default: "GENERAL",
+},
+  subscriptionStartDate: {
+    type: Date,
+    default: null,
   },
 
+  subscriptionEndDate: {
+    type: Date,
+    default: null,
+    index: true,
+  },
+  
   // ✅ phone auth
   phone: { type: String, unique: true, sparse: true, index: true },
   isPhoneVerified: { type: Boolean, default: false },
@@ -39,6 +50,11 @@ const userSchema = new mongoose.Schema({
 
   // ✅ shipping
   shipping: shippingSchema,
+  // Lifetime point balance. Points do not expire.
+  point: {
+    type: Number,
+    default: 0,
+  },
 }, {
   timestamps: true
 })

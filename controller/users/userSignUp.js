@@ -36,7 +36,7 @@ async function userSignUpController(req, res) {
 
       const payload = {
         ...req.body,
-        role: "GENEREL",
+        role: "GENERAL",
         password: hashPassword,
       };
 
@@ -54,7 +54,7 @@ async function userSignUpController(req, res) {
       // when login guest user
       const payload = {
         ...req.body,
-        role: "GENEREL",
+        role: "GENERAL",
       };
 
       //every time user new register get email,name,password from body

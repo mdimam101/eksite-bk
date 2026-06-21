@@ -1,13 +1,10 @@
-cat > .gitignore << 'EOF'
 node_modules/
 .env
-.env.local
-.env.production
-.env.development
+.env.*
+!.env.example
 .serverless/
 dist/
 build/
 npm-debug.log*
 .DS_Store
 Thumbs.db
-EOF

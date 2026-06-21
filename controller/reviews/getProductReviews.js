@@ -1,4 +1,5 @@
 // controller/reviews/getProductReviews.js
+const mongoose = require("mongoose");
 const ReviewModel = require("../../models/reviewModel");
 
 const getProductReviews = async (req, res) => {
@@ -12,6 +13,15 @@ const getProductReviews = async (req, res) => {
         message: "productId is required",
       });
     }
+
+       if (!mongoose.isValidObjectId(productId)) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Invalid productId",
+      });
+    }
+
 
     const reviews = await ReviewModel
       .find({ productId })

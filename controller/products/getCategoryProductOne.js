@@ -2,7 +2,7 @@ const productModel = require("../../models/productModel");
 
 const getCategoryProductOne = async (req, res) => {
   try {
-    const productCategory = await productModel.distinct("category");
+     const productCategory = await productModel.distinct("category", { isPublished: true });
 
     // console.log("category", productCategory);
 
@@ -10,7 +10,7 @@ const getCategoryProductOne = async (req, res) => {
     const productByCategory = []
 
     for(const category of productCategory) {
-        const product = await productModel.findOne({category : category})
+        const product = await productModel.findOne({ category, isPublished: true })
         
         if (product){
             productByCategory.push(product)

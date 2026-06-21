@@ -1,38 +1,3 @@
-/*const productModel = require("../../models/productModel");
-
-const getProductDetails = async (req, res) => {
-    try {
-        console.log("req with  id", req.body);
-        
-        const {productId} = req.body //get req from frontend
-
-        // search in mongoDB
-        const product = await productModel.findById(productId)
-
-        console.log("product", product);
-        
-
-        // send data in frontend 
-        res.json({
-            message: 'get product details',
-            data: product,
-            error: false,
-            success: true
-        })
-
-
-    } catch (err) {
-        // send data in frontend when error
-  res.status(400).json({
-    message: err.message || err,
-    error: true,
-    success: false,
-  });
-    }
-}
-
-module.exports = getProductDetails **/
-
 
 // controller/products/getProductDetails.js
 const mongoose = require("mongoose");
@@ -76,7 +41,7 @@ const getProductDetails = async (req, res) => {
 
     // ✅ fetch (optionally select a projection)
     const product = await productModel
-      .findById(productId)
+      .findfindOne({ _id: productId, isPublished: true })
       // .select("-__v") // <- চাইলে __v বাদ দিতে পারো
       .lean();
 

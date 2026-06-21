@@ -61,6 +61,10 @@ app.use('/api', require('./routes/trackBasic'));
 // ⬇️ NEW: AI size recommendation route
 app.use('/api', require('./routes/aiSizeRoute'));
 
+// ⬇️ NEW: AI skincare recommendation route
+app.use('/api', require('./routes/aiSkincareRoute'));
+
+
 // Health
 app.get('/', (req, res) => res.send('✅ API is live!'));
 

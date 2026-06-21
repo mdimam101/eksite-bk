@@ -8,6 +8,7 @@ const searchProduct = async (req, res) => {
 
   try {
     const products = await productModel.find({
+      isPublished: true,
         $or: [
           { productName: { $regex: q, $options: "i" } }, // productName এর মধ্যে সার্চ
           { category: { $regex: q, $options: "i" } }     // category এর মধ্যে সার্চ

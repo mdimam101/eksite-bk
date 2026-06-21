@@ -5,21 +5,37 @@ const ProductModel = require("../../models/productModel"); // যদি avg rati
 
 // (optional) product avg rating আপডেট হেল্পার
 async function recomputeProductRating(productId) {
-  try {
-    const agg = await ReviewModel.aggregate([
-      { $match: { productId: new require("mongoose").Types.ObjectId(productId) } },
-      { $group: { _id: "$productId", avg: { $avg: "$rating" }, count: { $sum: 1 } } },
-    ]);
+  // try {
+  //   const agg = await ReviewModel.aggregate([
+  //     { $match: { productId: new require("mongoose").Types.ObjectId(productId) } },
+  //     { $group: { _id: "$productId", avg: { $avg: "$rating" }, count: { $sum: 1 } } },
+  //   ]);
 
-    if (agg?.length && ProductModel) {
-      await ProductModel.findByIdAndUpdate(productId, {
-        ratingAvg: Math.round((agg[0].avg + Number.EPSILON) * 10) / 10,
-        ratingCount: agg[0].count,
-      });
-    }
-  } catch (e) {
-    // silently ignore rating update failure
-  }
+  //   if (agg?.length && ProductModel) {
+  //     await ProductModel.findByIdAndUpdate(productId, {
+  //       ratingAvg: Math.round((agg[0].avg + Number.EPSILON) * 10) / 10,
+  //       ratingCount: agg[0].count,
+  //     });
+  //   }
+  // } catch (e) {
+  //   // silently ignore rating update failure
+  // }
+
+    const productObjectId = new mongoose.Types.ObjectId(productId);
+  const agg = await ReviewModel.aggregate([
+    { $match: { productId: productObjectId } },
+    { $group: { _id: "$productId", avg: { $avg: "$rating" }, count: { $sum: 1 } } },
+  ]);
+
+  const ratingAvg = agg.length
+    ? Math.round((agg[0].avg + Number.EPSILON) * 10) / 10
+    : 0;
+  const ratingCount = agg.length ? agg[0].count : 0;
+
+  await ProductModel.findByIdAndUpdate(productId, {
+    ratingAvg,
+    ratingCount,
+  });
 }
 
 const createReview = async (req, res) => {
@@ -39,6 +55,23 @@ const createReview = async (req, res) => {
         success: false,
         error: true,
         message: "productId is required",
+      });
+    }
+
+        if (!mongoose.isValidObjectId(productId)) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Invalid productId",
+      });
+    }
+
+    const productExists = await ProductModel.exists({ _id: productId });
+    if (!productExists) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Product not found",
       });
     }
 
@@ -74,7 +107,12 @@ const createReview = async (req, res) => {
     const doc = await ReviewModel.create(payload);
 
     // (optional) product avg rating আপডেট
-    await recomputeProductRating(productId);
+    // await recomputeProductRating(productId);
+      try {
+      await recomputeProductRating(productId);
+    } catch (ratingError) {
+      console.error("recomputeProductRating error:", ratingError);
+    }
 
     return res.json({
       success: true,

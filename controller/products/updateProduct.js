@@ -8,7 +8,10 @@ async function updateProduct (req, res) {
         }
         const {_id, ...resBody} = req.body
 
-        const updateProduct = await productModel.findByIdAndUpdate(_id,resBody)
+        const updateProduct = await productModel.findByIdAndUpdate(_id,resBody, {
+          new: true,
+          runValidators: true,
+        })
 
         res.json({
             message: 'product Update Successfull',

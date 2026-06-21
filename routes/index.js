@@ -54,6 +54,10 @@ const commonUploadInfoController = require('../controller/common/commonUploadInf
 const commonGetInfoController = require('../controller/common/commonGetinfo')
 
 const googleLoginController = require('../controller/users/googleLogin');
+const updateUserMembership = require('../controller/users/updateUserMembership');
+const getUserById = require('../controller/users/getUserById');
+
+const { updateUserPoint, getUserPoint } = require('../controller/users/userPointController');
 
 router.post('/google-login', googleLoginController);
 
@@ -71,11 +75,18 @@ router.delete("/account", authToken, deleteAccount);
 // ✅ upsert shipping (user can edit anytime)
 router.put('/user/shipping', authToken, updateShipping)
 
+// Lifetime point APIs. These are called manually from order purchase/cancel/refund flow.
+router.post('/user/update-point', updateUserPoint)
+router.get('/user/point/:userId', getUserPoint)
+
 
 router.get('/userLogout', userLogout)
 
 // admin Panel
 router.get('/all-users',authToken, allUsers)
+router.get('/admin/users/:userId', authToken, getUserById)
+router.patch('/admin/users/:userId/membership', authToken, updateUserMembership)
+
 
 // upload Product
 //router.post('/upload-product',authToken, uploadProductController)
@@ -118,6 +129,7 @@ router.get("/search-suggestions", searchSuggestionController);
 //banar
 router.get("/banner",banarController)
 router.post("/upload-banner", authToken, uploadBanner);
+router.delete('/delete-banner', deleteBanner)
 // order
 router.post("/orders", authToken, placeOrderController);
 router.put("/reduce-stock", reduceProductStock);

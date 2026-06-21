@@ -100,6 +100,33 @@ provider:
   name: aws
   runtime: nodejs20.x
   region: ap-southeast-1
+
+  environment:
+    # Existing production variables
+    GOOGLE_CLIENT_ID: ${env:GOOGLE_CLIENT_ID}
+    MONGODB_URI: ${env:MONGODB_URI}
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+
+    # AWS image storage
+    S3_IMAGE_BUCKET: pyzara-product-images-806594971636-ap-southeast-1-an
+    S3_IMAGE_REGION: ap-southeast-1
+    CLOUDFRONT_IMAGE_URL: "https://d1agbev21xa0u2.cloudfront.net"
+
+    iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+          Resource:
+            - arn:aws:s3:::pyzara-product-images-806594971636-ap-southeast-1-an/products/*
+            - arn:aws:s3:::pyzara-product-images-806594971636-ap-southeast-1-an/reviews/*
+
+
+    
+
   httpApi:
     payload: '2.0'   # <-- add this to be explicit
     cors:

@@ -22,6 +22,16 @@ const productSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    sold: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    isPublished: {
+      type: Boolean,
+      default: true,
+    },
 
     // 🔽🔽 top-of-details page video support
     productVideo: {
@@ -51,10 +61,10 @@ const productSchema = mongoose.Schema(
     sizeDetails: {
       type: [
         {
-          size:   { type: String, required: true, trim: true }, // "S","M","L"
+          size: { type: String, required: true, trim: true }, // "S","M","L"
           length: { type: Number, min: 0 },
-          chest:  { type: Number, min: 0 },
-          unit:   { type: String, enum: ["inche"], default: "inche" },
+          chest: { type: Number, min: 0 },
+          unit: { type: String, enum: ["inche"], default: "inche" },
         },
       ],
       default: [],
@@ -65,15 +75,37 @@ const productSchema = mongoose.Schema(
     productQA: {
       type: [
         {
-          question:   { type: String,}, 
+          question: { type: String },
           answer: { type: String },
         },
       ],
       default: [],
     },
+      ratingAvg: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    ratingCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
 
+    // skin care info
+    skinCareInfo: {
+      productType: { type: String, default: "" },
+      ingredients: { type: [String], default: [] },
+      suitableSkinTypes: { type: [String], default: [] },
+      targetConcerns: { type: [String], default: [] },
+      avoidFor: { type: [String], default: [] },
+      usageTime: { type: String, default: "" },
+      texture: { type: String, default: "" },
+      isNonComedogenic: { type: Boolean, default: false },
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const productModel = mongoose.model("product", productSchema);

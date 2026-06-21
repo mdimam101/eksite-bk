@@ -89,6 +89,8 @@ async function authToken(req, res, next) {
 
 
 const jwt = require("jsonwebtoken");
+const userModel = require("../models/userModel");
+const { expirePremiumSubscriptionByUserId } = require("../utils/subscription");
 
 async function authToken(req, res, next) {
   try {
@@ -121,6 +123,7 @@ async function authToken(req, res, next) {
 
     const decoded = jwt.verify(token, process.env.TOKEN_SECRET_KEY);
     req.userId = decoded._id;
+    await expirePremiumSubscriptionByUserId(userModel, decoded._id);
     next();
   } catch (err) {
     console.error("JWT Verification Error:", err);

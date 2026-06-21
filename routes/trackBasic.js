@@ -7,11 +7,12 @@ const router = express.Router();
 
 const ALLOWED = new Set([
   'visit_app',
+  'visit_website',
   'category_click',
   'search',
   'product_view',
   'add_to_cart',
-  'order_confirm'
+  'order_confirm',
 ]);
 
 function buildKey({ metric, date, subCategory, term }) {
