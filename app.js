@@ -64,6 +64,9 @@ app.use('/api', require('./routes/aiSizeRoute'));
 // ⬇️ NEW: AI skincare recommendation route
 app.use('/api', require('./routes/aiSkincareRoute'));
 
+// Private S3 media upload routes
+app.use('/api', require('./routes/mediaRoute'));
+
 
 // Health
 app.get('/', (req, res) => res.send('✅ API is live!'));
