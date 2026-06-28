@@ -16,8 +16,12 @@ const MEDIA_TYPES = Object.freeze({
   "product-image": { root: "products", folder: "original", kind: "image", requiresAdmin: true },
   "product-video": { root: "products", folder: "video", kind: "video", requiresAdmin: true },
   "video-thumbnail": { root: "products", folder: "thumbnail", kind: "image", requiresAdmin: true },
-  // Reserved for a later review media phase.
-  "review-image": { root: "reviews", folder: "pending", kind: "image", requiresAdmin: false, enabled: false },
+ "review-image": {
+    kind: "image",
+    root: "reviews",
+    folder: "approved",
+    enabled: true,
+  },
   "review-video": { root: "reviews", folder: "pending", kind: "video", requiresAdmin: false, enabled: false },
 });
 
@@ -76,7 +80,37 @@ function validateProductMediaKey(key) {
   const allowed = /^products\/[A-Za-z0-9_-]+\/(original|video|thumbnail)\/[A-Fa-f0-9-]+\.(jpg|png|webp|mp4|webm|mov)$/;
   if (!allowed.test(key)) {
     return { ok: false, message: "Invalid media key" };
+  } 
+  return { ok: true };
+}
+
+function validateReviewMediaKey(key, expectedUserId) {
+  if (typeof key !== "string" || key.trim() === "" || !key.startsWith("reviews/approved/")) {
+    return { ok: false, message: "Invalid media key" };
   }
+  if (hasPathTraversal(key) || /%2f|%2F|%5c|%5C/.test(key)) {
+    return { ok: false, message: "Invalid media key" };
+  }
+  if (key.includes("//") || key.split("/").some(segment => segment.trim() === "")) {
+    return { ok: false, message: "Invalid media key" };
+  }
+
+  const segments = key.split("/");
+  if (segments.length !== 5 || segments[0] !== "reviews" || segments[1] !== "approved") {
+    return { ok: false, message: "Invalid media key" };
+  }
+
+  const [, , productId, userId, fileName] = segments;
+  if (!isSafeProductId(productId)) {
+    return { ok: false, message: "Invalid media key" };
+  }
+  if (!isSafeProductId(userId) || !isSafeProductId(String(expectedUserId || "")) || userId !== String(expectedUserId)) {
+    return { ok: false, message: "Invalid media key" };
+  }
+  if (!/^[A-Fa-f0-9-]+\.(jpg|jpeg|png|webp)$/.test(fileName)) {
+    return { ok: false, message: "Invalid media key" };
+  }
+
   return { ok: true };
 }
 
@@ -101,5 +135,6 @@ module.exports = {
   isSafeUploadSessionId,
   buildCloudFrontUrl,
   validateProductMediaKey,
+  validateReviewMediaKey,
   validateExpectedMaxSize,
 };

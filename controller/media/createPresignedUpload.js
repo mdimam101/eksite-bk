@@ -24,7 +24,7 @@ module.exports = async function createPresignedUpload(req, res) {
     if (!fileName || typeof fileName !== "string") {
       return res.status(400).json({ success: false, error: true, message: "fileName is required" });
     }
-    if (!mediaConfig || mediaConfig.enabled === false || mediaConfig.root !== "products") {
+    if (!mediaConfig || mediaConfig.enabled === false || !["products", "reviews"].includes(mediaConfig.root)) {
       return res.status(400).json({ success: false, error: true, message: "Invalid media type" });
     }
     if (!mimeConfig || mimeConfig.kind !== mediaConfig.kind) {
@@ -39,13 +39,24 @@ module.exports = async function createPresignedUpload(req, res) {
     if (productId && !isSafeProductId(String(productId))) {
       return res.status(400).json({ success: false, error: true, message: "Invalid productId" });
     }
-    if (uploadSessionId && !isSafeUploadSessionId(String(uploadSessionId))) {
+    if (mediaType === "review-image") {
+      if (!productId) {
+        return res.status(400).json({ success: false, error: true, message: "productId is required" });
+      }
+      if (!isSafeProductId(String(req.userId || ""))) {
+        return res.status(400).json({ success: false, error: true, message: "Invalid authenticated user" });
+      }
+    }
+    if (mediaConfig.root === "products" && uploadSessionId && !isSafeUploadSessionId(String(uploadSessionId))) {
       return res.status(400).json({ success: false, error: true, message: "Invalid uploadSessionId" });
     }
 
-    const scope = productId ? String(productId) : (uploadSessionId ? String(uploadSessionId) : `draft-${randomUUID()}`);
+    
     const objectName = `${randomUUID()}.${mimeConfig.extension}`;
-    const key = `products/${scope}/${mediaConfig.folder}/${objectName}`;
+    const scope = productId ? String(productId) : (uploadSessionId ? String(uploadSessionId) : `draft-${randomUUID()}`);
+    const key = mediaType === "review-image"
+      ? `reviews/approved/${String(productId)}/${String(req.userId)}/${objectName}`
+      : `products/${scope}/${mediaConfig.folder}/${objectName}`;
     const { bucket, cloudFrontBaseUrl } = getS3ImageConfig();
 
     const command = new PutObjectCommand({
@@ -71,7 +82,7 @@ module.exports = async function createPresignedUpload(req, res) {
           "Cache-Control": CACHE_CONTROL,
         },
         expiresIn: PRESIGNED_UPLOAD_EXPIRES_IN,
-        ...(!productId ? { uploadSessionId: scope } : {}),
+         ...(mediaConfig.root === "products" && !productId ? { uploadSessionId: scope } : {}),
       },
     });
   } catch (err) {

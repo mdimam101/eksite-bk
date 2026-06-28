@@ -4,6 +4,7 @@ const {
   getMimeConfig,
   buildCloudFrontUrl,
   validateProductMediaKey,
+  validateReviewMediaKey,
   validateExpectedMaxSize,
 } = require("../../utils/mediaUploadConfig");
 
@@ -16,7 +17,9 @@ module.exports = async function confirmMediaUpload(req, res) {
   const normalizedContentType = String(expectedContentType || "").toLowerCase();
 
   try {
-    const keyValidation = validateProductMediaKey(key);
+    const keyValidation = typeof key === "string" && key.startsWith("reviews/approved/")
+      ? validateReviewMediaKey(key, req.userId)
+      : validateProductMediaKey(key);
     if (!keyValidation.ok) {
       return res.status(400).json({ success: false, error: true, message: keyValidation.message });
     }

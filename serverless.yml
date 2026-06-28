@@ -112,7 +112,7 @@ provider:
     S3_IMAGE_REGION: ap-southeast-1
     CLOUDFRONT_IMAGE_URL: "https://d1agbev21xa0u2.cloudfront.net"
 
-    iam:
+  iam:
     role:
       statements:
         - Effect: Allow
