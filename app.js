@@ -24,6 +24,13 @@ app.use(express.json({
 
 // 🔧 Fallback: Buffer বা string এলে JSON অবজেক্টে কনভার্ট করো
 app.use((req, res, next) => {
+//   console.log({
+//   origin: req.headers.origin,
+//   hasRequestKey: Boolean(req.headers["x-client-key"]),
+//   hasServerKey: Boolean(process.env.PUBLIC_CLIENT_KEY),
+//   keyMatches:
+//     req.headers["x-client-key"] === process.env.PUBLIC_CLIENT_KEY,
+// });
   try {
     if (Buffer.isBuffer(req.body)) {
       const s = req.body.toString('utf8');

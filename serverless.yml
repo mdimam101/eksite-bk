@@ -107,6 +107,9 @@ provider:
     MONGODB_URI: ${env:MONGODB_URI}
     OPENAI_API_KEY: ${env:OPENAI_API_KEY}
 
+    # Public API client key
+    PUBLIC_CLIENT_KEY: ${env:PUBLIC_CLIENT_KEY}
+
     # AWS image storage
     S3_IMAGE_BUCKET: pyzara-product-images-806594971636-ap-southeast-1-an
     S3_IMAGE_REGION: ap-southeast-1
@@ -141,6 +144,7 @@ provider:
         - Authorization
         - X-Requested-With
         - Cookie
+        - x-client-key
       allowedMethods:
         - GET
         - POST

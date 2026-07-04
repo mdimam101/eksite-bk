@@ -58,6 +58,7 @@ const updateUserMembership = require('../controller/users/updateUserMembership')
 const getUserById = require('../controller/users/getUserById');
 
 const { updateUserPoint, getUserPoint } = require('../controller/users/userPointController');
+const publicApiProtection = require('../middleware/publicApiProtection')
 
 router.post('/google-login', googleLoginController);
 
@@ -93,7 +94,7 @@ router.patch('/admin/users/:userId/membership', authToken, updateUserMembership)
 router.post('/upload-product', uploadProductController)
 
 // get all product
-router.get('/get-product', getAllProduct) // No need auth check
+router.get('/get-product',publicApiProtection, getAllProduct) // No need auth check
 
 // update product
 router.post('/update-product', updateProduct)
@@ -105,14 +106,14 @@ router.post('/upload-common-info', commonUploadInfoController)
 router.get('/get-common-info', commonGetInfoController)
 
 // get cetegory name
-router.get('/get-categoryProduct', getCategoryProductOne)
+router.get('/get-categoryProduct',publicApiProtection,  getCategoryProductOne)
 
-router.post('/category-wish-product', getCategoryWishProduct)
+router.post('/category-wish-product',publicApiProtection,  getCategoryWishProduct)
 
 // get product details
-router.post('/product-details', getProductDetails)
-router.get('/product-details', getProductDetails);  //optionall
-router.get('/product-details/:productId', getProductDetails); // GET /:id  (optional)
+router.post('/product-details',publicApiProtection,  getProductDetails)
+router.get('/product-details',publicApiProtection,  getProductDetails);  //optionall
+router.get('/product-details/:productId',publicApiProtection,  getProductDetails); // GET /:id  (optional)
 
 // user add to cart
 router.post('/addtocart',authToken, addToCartController)
@@ -123,8 +124,8 @@ router.post('/decrease-quantity', authToken, decreaseQuantityController);
 router.delete("/remove", authToken, removeFromCartController);
 
 //search
-router.get("/search", searchProduct);
-router.get("/search-suggestions", searchSuggestionController);
+router.get("/search", publicApiProtection, searchProduct);
+router.get("/search-suggestions", publicApiProtection,  searchSuggestionController);
 
 //banar
 router.get("/banner",banarController)
