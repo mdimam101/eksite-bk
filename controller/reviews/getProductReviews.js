@@ -26,7 +26,8 @@ const getProductReviews = async (req, res) => {
     const reviews = await ReviewModel
       .find({ productId })
       .sort({ createdAt: -1 })
-      .select("-__v");
+      .select("-__v")
+      .lean();
 
     return res.json({
       success: true,

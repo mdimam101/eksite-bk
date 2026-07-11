@@ -9,33 +9,39 @@ const reviewSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+
     orderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "order",
-    },
-    itemId: {
-      type: mongoose.Schema.Types.ObjectId, // order line item id (optional)
+      required: true,
+      index: true,
     },
 
-    // 🧑‍💻 who wrote the review
+    itemId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      index: true,
+    },
+
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
       required: true,
       index: true,
     },
+
     userName: {
       type: String,
       default: "Anonymous",
       trim: true,
     },
 
-    // ⭐ review content
     comment: {
       type: String,
       trim: true,
       default: "",
     },
+
     rating: {
       type: Number,
       min: 1,
@@ -43,14 +49,22 @@ const reviewSchema = new mongoose.Schema(
       default: 5,
       required: true,
     },
+
     images: {
-      type: [String], // Cloudinary URLs
+      type: [String],
       default: [],
-      validate: (arr) => arr.length <= 6, // keep it sane
+      validate: (arr) => arr.length <= 6,
     },
   },
   { timestamps: true }
 );
 
+// Same order item diye only 1 review allow
+reviewSchema.index(
+  { orderId: 1, itemId: 1 },
+  { unique: true }
+);
+
 const ReviewModel = mongoose.model("review", reviewSchema);
+
 module.exports = ReviewModel;

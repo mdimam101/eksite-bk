@@ -22,7 +22,7 @@ exports.verifyOtp = async (req, res) => {
     const r = await checkOtp(phone, code);
     if (r.status === 'approved') {
       // (optional) JWT ইস্যু করতে চাইলে:
-      const token = jwt.sign({ phone }, process.env.TOKEN_SECRET_KEY, { expiresIn: '30d' });
+      const token = jwt.sign({ phone }, process.env.TOKEN_SECRET_KEY, { expiresIn: "365d" });
       return res.json({ success: true, approved: true, token });
     }
     return res.status(400).json({ success: false, message: 'Invalid or expired code' });

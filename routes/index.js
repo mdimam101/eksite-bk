@@ -59,6 +59,9 @@ const getUserById = require('../controller/users/getUserById');
 
 const { updateUserPoint, getUserPoint } = require('../controller/users/userPointController');
 const publicApiProtection = require('../middleware/publicApiProtection')
+const getAppVersion = require('../controller/appVersion/getAppVersion')
+
+router.get('/app-version', getAppVersion);
 
 router.post('/google-login', googleLoginController);
 

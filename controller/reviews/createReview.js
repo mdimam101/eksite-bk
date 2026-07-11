@@ -3,34 +3,27 @@ const mongoose = require("mongoose");
 const ReviewModel = require("../../models/reviewModel");
 const UserModel = require("../../models/userModel");
 const ProductModel = require("../../models/productModel");
+const OrderModel = require("../../models/OrderModel");
 
-// (optional) product avg rating আপডেট হেল্পার
+// product avg rating update helper
 async function recomputeProductRating(productId) {
-  // try {
-  //   const agg = await ReviewModel.aggregate([
-  //     { $match: { productId: new require("mongoose").Types.ObjectId(productId) } },
-  //     { $group: { _id: "$productId", avg: { $avg: "$rating" }, count: { $sum: 1 } } },
-  //   ]);
+  const productObjectId = new mongoose.Types.ObjectId(productId);
 
-  //   if (agg?.length && ProductModel) {
-  //     await ProductModel.findByIdAndUpdate(productId, {
-  //       ratingAvg: Math.round((agg[0].avg + Number.EPSILON) * 10) / 10,
-  //       ratingCount: agg[0].count,
-  //     });
-  //   }
-  // } catch (e) {
-  //   // silently ignore rating update failure
-  // }
-
-    const productObjectId = new mongoose.Types.ObjectId(productId);
   const agg = await ReviewModel.aggregate([
     { $match: { productId: productObjectId } },
-    { $group: { _id: "$productId", avg: { $avg: "$rating" }, count: { $sum: 1 } } },
+    {
+      $group: {
+        _id: "$productId",
+        avg: { $avg: "$rating" },
+        count: { $sum: 1 },
+      },
+    },
   ]);
 
   const ratingAvg = agg.length
     ? Math.round((agg[0].avg + Number.EPSILON) * 10) / 10
     : 0;
+
   const ratingCount = agg.length ? agg[0].count : 0;
 
   await ProductModel.findByIdAndUpdate(productId, {
@@ -41,7 +34,8 @@ async function recomputeProductRating(productId) {
 
 const createReview = async (req, res) => {
   try {
-    const userId = req.userId; // 🔐 comes from authToken middleware
+    const userId = req.userId;
+
     const {
       productId,
       orderId,
@@ -59,7 +53,23 @@ const createReview = async (req, res) => {
       });
     }
 
-        if (!mongoose.isValidObjectId(productId)) {
+    if (!orderId) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "orderId is required",
+      });
+    }
+
+    if (!itemId) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "itemId is required",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(productId)) {
       return res.status(400).json({
         success: false,
         error: true,
@@ -67,7 +77,24 @@ const createReview = async (req, res) => {
       });
     }
 
+    if (!mongoose.isValidObjectId(orderId)) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Invalid orderId",
+      });
+    }
+
+    if (!mongoose.isValidObjectId(itemId)) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Invalid itemId",
+      });
+    }
+
     const productExists = await ProductModel.exists({ _id: productId });
+
     if (!productExists) {
       return res.status(404).json({
         success: false,
@@ -76,17 +103,43 @@ const createReview = async (req, res) => {
       });
     }
 
-    // user name নেয়ার চেষ্টা
-    let userName = "Anonymous";
-    if (userId) {
-      const userDoc = await UserModel.findById(userId).select("name");
-      if (userDoc?.name) userName = userDoc.name;
+    // Check this order item actually belongs to this user and product
+    const orderItemExists = await OrderModel.exists({
+      _id: orderId,
+      userId,
+      items: {
+        $elemMatch: {
+          _id: itemId,
+          productId,
+        },
+      },
+    });
+
+    if (!orderItemExists) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Invalid order item for this product",
+      });
     }
 
-    // (optional) একি প্রোডাক্টে আগে রিভিউ আছে কি না (একজন ইউজার একবার)
-    const existing = await ReviewModel.findOne({ productId, userId });
+    let userName = "Anonymous";
+
+    if (userId) {
+      const userDoc = await UserModel.findById(userId).select("name");
+
+      if (userDoc?.name) {
+        userName = userDoc.name;
+      }
+    }
+
+    // Same order item e only one review
+    const existing = await ReviewModel.findOne({
+      orderId,
+      itemId,
+    });
+
     if (existing) {
-      // চাইলে আপডেটও করতে পারো (updateOne) — এখানে আমি ব্লক করছি
       return res.json({
         success: false,
         error: true,
@@ -99,7 +152,7 @@ const createReview = async (req, res) => {
       orderId,
       itemId,
       userId,
-      userName,      // ✅ নাম সেট
+      userName,
       comment,
       rating,
       images,
@@ -107,9 +160,28 @@ const createReview = async (req, res) => {
 
     const doc = await ReviewModel.create(payload);
 
-    // (optional) product avg rating আপডেট
-    // await recomputeProductRating(productId);
-      try {
+    // Review success hole oi order-er oi item status Reviewed kore dao
+    const orderUpdateResult = await OrderModel.updateOne(
+      {
+        _id: orderId,
+        userId,
+      },
+      {
+        $set: {
+          "items.$[item].itemStatus": "Reviewed",
+        },
+      },
+      {
+        arrayFilters: [
+          {
+            "item._id": new mongoose.Types.ObjectId(itemId),
+            "item.productId": new mongoose.Types.ObjectId(productId),
+          },
+        ],
+      }
+    );
+
+    try {
       await recomputeProductRating(productId);
     } catch (ratingError) {
       console.error("recomputeProductRating error:", ratingError);
@@ -120,8 +192,17 @@ const createReview = async (req, res) => {
       error: false,
       message: "Review submitted",
       data: doc,
+      orderItemStatusUpdated: orderUpdateResult.modifiedCount > 0,
     });
   } catch (err) {
+    if (err.code === 11000) {
+      return res.json({
+        success: false,
+        error: true,
+        message: "You have already reviewed this product.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       error: true,

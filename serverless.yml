@@ -115,6 +115,13 @@ provider:
     S3_IMAGE_REGION: ap-southeast-1
     CLOUDFRONT_IMAGE_URL: "https://d1agbev21xa0u2.cloudfront.net"
 
+    # App version controller
+    ANDROID_LATEST_VERSION: ${env:ANDROID_LATEST_VERSION}
+    ANDROID_PLAY_STORE_URL: ${env:ANDROID_PLAY_STORE_URL}
+    ANDROID_UPDATE_TITLE: ${env:ANDROID_UPDATE_TITLE}
+    ANDROID_UPDATE_MESSAGE: ${env:ANDROID_UPDATE_MESSAGE}
+
+
   iam:
     role:
       statements:
