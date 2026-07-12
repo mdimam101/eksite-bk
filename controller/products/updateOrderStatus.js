@@ -1,19 +1,26 @@
 const mongoose = require("mongoose");
 const OrderModel = require("../../models/OrderModel");
+const logger = require("../../utils/logger");
 
-const ALLOWED_STATUS = [
-  "Pending",
-  "Confirmed",
-  "Shipped",
-  "Delivered",
-  "Canceled",
+
+const ORDER_STATUSES = ["Pending", "Confirmed", "Shipped", "Delivered", "Canceled"];
+const ITEM_STATUSES = [
+  "Normal",
   "Return",
+  "RConfirmed",
+  "ReturnComplete",
+  "Reviewed",
+  "Canceled",
 ];
 
 async function updateOrderStatus(req, res) {
   try {
     const { orderId } = req.params;
-    const { status, itemId, isItemStatus = false } = req.body || {};
+    const { status, itemId } = req.body || {};
+    const isItemStatus =
+      req.body?.isItemStatus === true ||
+      req.body?.itemStatus === true ||
+      req.body?.itemstatus === true;
 
     if (!mongoose.Types.ObjectId.isValid(orderId)) {
       return res
@@ -21,11 +28,13 @@ async function updateOrderStatus(req, res) {
         .json({ success: false, error: true, message: "Invalid orderId" });
     }
 
-    if (!status || !ALLOWED_STATUS.includes(status)) {
+    const allowedStatuses = isItemStatus ? ITEM_STATUSES : ORDER_STATUSES;
+
+    if (!status || !allowedStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
         error: true,
-        message: `Invalid status. Allowed: ${ALLOWED_STATUS.join(", ")}`,
+        message: `Invalid ${isItemStatus ? "item" : "order"} status. Allowed: ${allowedStatuses.join(", ")}`,
       });
     }
 
@@ -63,9 +72,6 @@ async function updateOrderStatus(req, res) {
       item.itemStatus = status;
     } else {
       order.status = status;
-      order.items.forEach((it) => {
-        it.itemStatus = status;
-      });
     }
 
     await order.save();
@@ -77,7 +83,14 @@ async function updateOrderStatus(req, res) {
       data: order,
     });
   } catch (err) {
-    console.error("updateOrderStatus error", err);
+    logger.error("mongodb_operation_failed", {
+      requestId: req.requestId,
+      userId: req.userId,
+      orderId: req.params?.orderId,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      errorStack: err?.stack,
+    });
     return res
       .status(500)
       .json({ success: false, error: true, message: "Server error" });

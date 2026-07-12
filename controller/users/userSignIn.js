@@ -1,11 +1,11 @@
 const userModel = require("../../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const logger = require("../../utils/logger");
 
 async function userSignInController(req, res) {
   try {
     const { email, password, deviceId } = req.body || {};
-    console.log("🦌◆ email, password🦌◆", req.body);
 
     if (!deviceId) {
       if (!email) {
@@ -23,8 +23,6 @@ async function userSignInController(req, res) {
       }
 
       const checkPassword = await bcrypt.compare(password, user.password);
-
-      console.log("check", checkPassword);
 
       if (checkPassword) {
         const tokenData = {
@@ -67,11 +65,10 @@ async function userSignInController(req, res) {
         };
 
       const tokenData = { _id: user._id, deviceId: user.deviceId };
-      console.log("◆token data", tokenData);
+
       const token = jwt.sign(tokenData, process.env.TOKEN_SECRET_KEY, {
         expiresIn: "365d",
       });
-      console.log("◆token token", token);
 
       return res
         .cookie("token", token, tokenOption)
@@ -84,6 +81,13 @@ async function userSignInController(req, res) {
         });
     }
   } catch (err) {
+    logger.warn("authentication_failed", {
+      requestId: req.requestId,
+      method: req.method,
+      path: req.originalUrl || req.url,
+      errorName: err?.name,
+      errorMessage: err?.message,
+    });
     res.json({
       message: err.message || err,
       error: true,

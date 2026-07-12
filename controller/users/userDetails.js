@@ -1,10 +1,9 @@
 const userModel = require("../../models/userModel");
+const logger = require("../../utils/logger");
 
 async function userDetailsController (req, res) {
     try {
-        console.log("■🦌◆user id --", req.userId); //authToken jeta pathabe oita dorbe
         const user = await userModel.findById(req.userId)
-        console.log("◆user details");
         // send data in frontend when success
         res.status(200).json({
             data: user,
@@ -15,7 +14,13 @@ async function userDetailsController (req, res) {
         console.log("user------", user);
         
     } catch (err) {
-        // send data in frontend when error
+       logger.error("mongodb_operation_failed", {
+            requestId: req.requestId,
+            userId: req.userId,
+            errorName: err?.name,
+            errorMessage: err?.message,
+            errorStack: err?.stack,
+        });
         res.status(400).json({
             message: err.message || err,
             error : true,

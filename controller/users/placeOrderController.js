@@ -1,4 +1,6 @@
 const OrderModel = require("../../models/OrderModel");
+const logger = require("../../utils/logger");
+
 
 const placeOrderController = async (req, res) => {
   try {
@@ -46,6 +48,13 @@ const placeOrderController = async (req, res) => {
 
     const savedOrder = await OrderModel.create(payload);
 
+     logger.info("order_created", {
+      requestId: req.requestId,
+      userId: currentUser,
+      orderId: savedOrder?._id,
+      itemCount: savedOrder?.items?.length,
+    });
+
     return res.json({
       message: "Order placed successfully.",
       data: savedOrder,
@@ -54,7 +63,13 @@ const placeOrderController = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Order Error:", err?.message || err);
+    logger.error("order_create_failed", {
+      requestId: req.requestId,
+      userId: req.userId,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      errorStack: err?.stack,
+    });
     return res.status(500).json({
       message: err?.message || "Server Error",
       error: true,

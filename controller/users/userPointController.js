@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const userModel = require("../../models/userModel");
+const logger = require("../../utils/logger");
 
 const allowedPointTypes = ["add", "minus"];
 
@@ -83,6 +84,13 @@ const updateUserPoint = async (req, res) => {
       point: user.point,
     });
   } catch (error) {
+    logger.error("points_update_failed", {
+      requestId: req.requestId,
+      userId: req.body?.userId,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      errorStack: error?.stack,
+    });
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -122,6 +130,13 @@ const getUserPoint = async (req, res) => {
       point: user.point || 0,
     });
   } catch (error) {
+    logger.error("mongodb_operation_failed", {
+      requestId: req.requestId,
+      userId: req.params?.userId,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      errorStack: error?.stack,
+    });
     return res.status(500).json({
       success: false,
       message: error.message,

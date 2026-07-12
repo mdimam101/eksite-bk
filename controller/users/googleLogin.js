@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const UserModel = require("../../models/userModel");
+const logger = require("../../utils/logger");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -33,13 +34,12 @@ async function googleLoginController(req, res) {
 
     const { sub: googleId, email, name, picture, email_verified } = payload;
 
-    console.log("✅ Google verified user:", {
-      googleId,
-      email,
-      name,
-      picture,
-      email_verified,
-    });
+     logger.warn("authentication_failed", {
+        requestId: req.requestId,
+        method: req.method,
+        path: req.originalUrl || req.url,
+        reason: "google_email_not_verified",
+      });
 
     if (!email_verified) {
       return res.status(400).json({
@@ -105,7 +105,13 @@ async function googleLoginController(req, res) {
       },
     });
   } catch (error) {
-    console.error("❌ Google login error:", error);
+    logger.warn("authentication_failed", {
+      requestId: req.requestId,
+      method: req.method,
+      path: req.originalUrl || req.url,
+      errorName: error?.name,
+      errorMessage: error?.message,
+    });
 
     return res.status(500).json({
       success: false,

@@ -2,11 +2,14 @@ const { randomUUID } = require("crypto");
 const { PutObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const { s3Client, getS3ImageConfig } = require("../../config/s3Client");
+const logger = require("../../utils/logger");
 const {
   CACHE_CONTROL,
   PRESIGNED_UPLOAD_EXPIRES_IN,
   MEDIA_TYPES,
+  normalizeMimeType,
   getMimeConfig,
+  getMimeConfigFromFileName,
   validatePositiveInteger,
   isSafeProductId,
   isSafeUploadSessionId,
@@ -16,8 +19,8 @@ const {
 module.exports = async function createPresignedUpload(req, res) {
   try {
     const { fileName, contentType, fileSize, mediaType, productId, uploadSessionId } = req.body || {};
-    const normalizedContentType = String(contentType || "").toLowerCase();
-    const mimeConfig = getMimeConfig(normalizedContentType);
+    let normalizedContentType = normalizeMimeType(contentType);
+    let mimeConfig = getMimeConfig(normalizedContentType);
     const mediaConfig = MEDIA_TYPES[mediaType];
     const numericFileSize = Number(fileSize);
 
@@ -26,6 +29,10 @@ module.exports = async function createPresignedUpload(req, res) {
     }
     if (!mediaConfig || mediaConfig.enabled === false || !["products", "reviews"].includes(mediaConfig.root)) {
       return res.status(400).json({ success: false, error: true, message: "Invalid media type" });
+    }
+    if (!mimeConfig || normalizedContentType === "application/octet-stream") {
+      mimeConfig = getMimeConfigFromFileName(fileName);
+      normalizedContentType = mimeConfig?.contentType || normalizedContentType;
     }
     if (!mimeConfig || mimeConfig.kind !== mediaConfig.kind) {
       return res.status(400).json({ success: false, error: true, message: "Unsupported content type" });
@@ -86,7 +93,14 @@ module.exports = async function createPresignedUpload(req, res) {
       },
     });
   } catch (err) {
-    console.error("createPresignedUpload error:", err?.message || err);
+    logger.error("s3_upload_failed", {
+      requestId: req.requestId,
+      userId: req.userId,
+      mediaType: req.body?.mediaType,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      errorStack: err?.stack,
+    });
     return res.status(500).json({ success: false, error: true, message: "Server error" });
   }
 };

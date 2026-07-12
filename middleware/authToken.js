@@ -91,6 +91,7 @@ async function authToken(req, res, next) {
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/userModel");
 const { expirePremiumSubscriptionByUserId } = require("../utils/subscription");
+const logger = require("../utils/logger");
 
 async function authToken(req, res, next) {
   try {
@@ -111,9 +112,15 @@ async function authToken(req, res, next) {
         ?.split("=")[1];
     }
 
-    console.log("🦌◆🦌◆token", token, req.headers.cookie);
+    // console.log("🦌◆🦌◆token", token, req.headers.cookie);
 
     if (!token) {
+       logger.warn("authentication_failed", {
+        requestId: req.requestId,
+        method: req.method,
+        path: req.originalUrl || req.url,
+        reason: "missing_token",
+      });
       return res.status(401).json({
         message: "User not logged in",
         error: true,
@@ -126,7 +133,13 @@ async function authToken(req, res, next) {
     await expirePremiumSubscriptionByUserId(userModel, decoded._id);
     next();
   } catch (err) {
-    console.error("JWT Verification Error:", err);
+     logger.warn("authentication_failed", {
+      requestId: req.requestId,
+      method: req.method,
+      path: req.originalUrl || req.url,
+      errorName: err?.name,
+      errorMessage: err?.message,
+    });
     return res.status(401).json({
       message: "Invalid or expired token",
       error: true,

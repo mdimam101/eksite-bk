@@ -2,6 +2,7 @@ const Coupon = require("../../models/Coupon");
 const OrderModel = require("../../models/OrderModel");
 const { calculateDiscountOnSubtotal, inWindow } = require("../../utils/calcCouponSubtotal");
 const { NON_SUCCESS_EXCLUDE } = require("../../utils/orderStatus");
+const logger = require("../../utils/logger");
 
 module.exports = async function applyCoupon(req, res) {
   try {
@@ -22,14 +23,31 @@ module.exports = async function applyCoupon(req, res) {
       deletedAt: null,
     }).lean();
 
-    if (!coupon) return res.status(404).json({ success: false, message: "Coupon not found" });
+    if (!coupon) {
+      logger.warn("coupon_validation_failed", {
+        requestId: req.requestId,
+        userId,
+        reason: "not_found",
+      });
+      return res.status(404).json({ success: false, message: "Coupon not found" });
+    }
 
     if (!inWindow(new Date(), coupon.startAt, coupon.endAt)) {
+        logger.warn("coupon_validation_failed", {
+        requestId: req.requestId,
+        userId,
+        reason: "inactive",
+      });
       return res.status(400).json({ success: false, message: "Coupon is not active now" });
     }
 
     // Global cap
     if (coupon.usageLimitTotal > 0 && Number(coupon.timesRedeemed || 0) >= coupon.usageLimitTotal) {
+      logger.warn("coupon_validation_failed", {
+        requestId: req.requestId,
+        userId,
+        reason: "total_limit_reached",
+      });
       return res.status(400).json({ success: false, message: "Coupon usage limit reached" });
     }
 
@@ -48,12 +66,22 @@ module.exports = async function applyCoupon(req, res) {
         status: { $nin: NON_SUCCESS_EXCLUDE },
       });
       if (usedCount >= coupon.usageLimitPerUser) {
+         logger.warn("coupon_validation_failed", {
+          requestId: req.requestId,
+          userId,
+          reason: "per_user_limit_reached",
+        });
         return res.status(400).json({ success: false, message: "You already used this coupon" });
       }
     }
 
     const calc = calculateDiscountOnSubtotal({ subtotal, coupon });
     if (!calc.ok) {
+       logger.warn("coupon_validation_failed", {
+        requestId: req.requestId,
+        userId,
+        reason: calc.reason || "not_eligible",
+      });
       return res.status(400).json({ success: false, message: calc.reason || "Not eligible" });
     }
 
@@ -74,7 +102,13 @@ module.exports = async function applyCoupon(req, res) {
       },
     });
   } catch (err) {
-    console.error("applyCoupon error:", err);
+    logger.error("mongodb_operation_failed", {
+      requestId: req.requestId,
+      userId: req.userId,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      errorStack: err?.stack,
+    });
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

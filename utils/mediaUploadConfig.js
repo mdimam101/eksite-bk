@@ -5,8 +5,11 @@ const PRESIGNED_UPLOAD_EXPIRES_IN = 300;
 
 const MIME_CONFIG = Object.freeze({
   "image/jpeg": { extension: "jpg", kind: "image", maxSize: IMAGE_MAX_SIZE },
+  "image/jpg": { extension: "jpg", kind: "image", maxSize: IMAGE_MAX_SIZE },
   "image/png": { extension: "png", kind: "image", maxSize: IMAGE_MAX_SIZE },
   "image/webp": { extension: "webp", kind: "image", maxSize: IMAGE_MAX_SIZE },
+  "image/heic": { extension: "heic", kind: "image", maxSize: IMAGE_MAX_SIZE },
+  "image/heif": { extension: "heif", kind: "image", maxSize: IMAGE_MAX_SIZE },
   "video/mp4": { extension: "mp4", kind: "video", maxSize: VIDEO_MAX_SIZE },
   "video/webm": { extension: "webm", kind: "video", maxSize: VIDEO_MAX_SIZE },
   "video/quicktime": { extension: "mov", kind: "video", maxSize: VIDEO_MAX_SIZE },
@@ -28,8 +31,27 @@ const MEDIA_TYPES = Object.freeze({
 const SAFE_SCOPE_PATTERN = /^[A-Za-z0-9_-]{8,80}$/;
 const SAFE_PRODUCT_ID_PATTERN = /^[A-Fa-f0-9]{24}$/;
 
+function normalizeMimeType(contentType) {
+  return String(contentType || "").split(";")[0].trim().toLowerCase();
+}
+
+function withContentType(contentType, config) {
+  return config ? { ...config, contentType } : undefined;
+}
+
 function getMimeConfig(contentType) {
-  return MIME_CONFIG[String(contentType || "").toLowerCase()];
+  const normalizedContentType = normalizeMimeType(contentType);
+  return withContentType(normalizedContentType, MIME_CONFIG[normalizedContentType]);
+}
+
+function getMimeConfigFromFileName(fileName) {
+  const extension = String(fileName || "").split(".").pop()?.toLowerCase();
+  if (!extension || extension === String(fileName || "").toLowerCase()) {
+    return undefined;
+  }
+
+  const entry = Object.entries(MIME_CONFIG).find(([, config]) => config.extension === extension);
+  return entry ? withContentType(entry[0], entry[1]) : undefined;
 }
 
 function validatePositiveInteger(value) {
@@ -77,7 +99,7 @@ function validateProductMediaKey(key) {
   if (key.includes("//") || key.split("/").some(segment => segment.trim() === "")) {
     return { ok: false, message: "Invalid media key" };
   }
-  const allowed = /^products\/[A-Za-z0-9_-]+\/(original|video|thumbnail)\/[A-Fa-f0-9-]+\.(jpg|png|webp|mp4|webm|mov)$/;
+  const allowed = /^products\/[A-Za-z0-9_-]+\/(original|video|thumbnail)\/[A-Fa-f0-9-]+\.(jpg|jpeg|png|webp|heic|heif|mp4|webm|mov)$/;
   if (!allowed.test(key)) {
     return { ok: false, message: "Invalid media key" };
   } 
@@ -107,7 +129,7 @@ function validateReviewMediaKey(key, expectedUserId) {
   if (!isSafeProductId(userId) || !isSafeProductId(String(expectedUserId || "")) || userId !== String(expectedUserId)) {
     return { ok: false, message: "Invalid media key" };
   }
-  if (!/^[A-Fa-f0-9-]+\.(jpg|jpeg|png|webp)$/.test(fileName)) {
+  if (!/^[A-Fa-f0-9-]+\.(jpg|jpeg|png|webp|heic|heif)$/.test(fileName)) {
     return { ok: false, message: "Invalid media key" };
   }
 
@@ -129,7 +151,9 @@ module.exports = {
   PRESIGNED_UPLOAD_EXPIRES_IN,
   MIME_CONFIG,
   MEDIA_TYPES,
+  normalizeMimeType,
   getMimeConfig,
+  getMimeConfigFromFileName,
   validatePositiveInteger,
   isSafeProductId,
   isSafeUploadSessionId,

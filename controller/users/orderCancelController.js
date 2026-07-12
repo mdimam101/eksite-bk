@@ -1,6 +1,7 @@
 // controller/users/orderCancelController.js
 const mongoose = require("mongoose");
 const OrderModel = require("../../models/OrderModel");
+const logger = require("../../utils/logger");
 
 const orderCancelController = async (req, res) => {
   try {
@@ -16,11 +17,23 @@ const orderCancelController = async (req, res) => {
     });
 
     if (deleted) {
+       logger.info("order_cancelled", {
+        requestId: req.requestId,
+        userId: req.userId,
+        orderId,
+      });
       return res.json({ success: true, message: "Order cancelled successfully" });
     }
     return res.status(404).json({ success: false, message: "Order not found or unauthorized" });
   } catch (error) {
-    console.error("❌ Error cancelling order:", error);
+    logger.error("order_cancel_failed", {
+      requestId: req.requestId,
+      userId: req.userId,
+      orderId: req.params?.orderId,
+      errorName: error?.name,
+      errorMessage: error?.message,
+      errorStack: error?.stack,
+    });
     res.status(500).json({ success: false, message: "Server error" });
   }
 };

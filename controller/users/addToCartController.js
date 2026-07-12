@@ -1,4 +1,5 @@
 const addToCartModel = require("../../models/addToCartModel");
+const logger = require("../../utils/logger");
 
 const addToCartController = async (req, res) => {
   try {
@@ -52,6 +53,14 @@ const addToCartController = async (req, res) => {
     });
 
   } catch (err) {
+     logger.error("mongodb_operation_failed", {
+      requestId: req.requestId,
+      userId: req.userId,
+      productId: req.body?.productId,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      errorStack: err?.stack,
+    });
     res.status(400).json({
       message: err.message || "Server error",
       error: true,

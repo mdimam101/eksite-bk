@@ -1,6 +1,7 @@
 const { DeleteObjectCommand } = require("@aws-sdk/client-s3");
 const { s3Client, getS3ImageConfig } = require("../../config/s3Client");
 const { validateProductMediaKey, validateReviewMediaKey } = require("../../utils/mediaUploadConfig");
+const logger = require("../../utils/logger");
 
 module.exports = async function deleteMedia(req, res) {
   try {
@@ -22,7 +23,13 @@ module.exports = async function deleteMedia(req, res) {
       data: { key },
     });
   } catch (err) {
-    console.error("deleteMedia error:", err?.name || err?.message || err);
+    logger.error("s3_delete_failed", {
+      requestId: req.requestId,
+      userId: req.userId,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      errorStack: err?.stack,
+    });
     return res.status(500).json({ success: false, error: true, message: "Server error" });
   }
 };

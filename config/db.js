@@ -24,6 +24,7 @@
 
 // config/db.js
 const mongoose = require('mongoose');
+const logger = require("../utils/logger");
 
 let cached = global.mongooseConn || { conn: null, promise: null };
 
@@ -38,7 +39,7 @@ async function connectDB() {
     cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then(m => m.connection);
   }
   cached.conn = await cached.promise;
-  console.log('✅ MongoDB connected');
+  logger.info("mongodb_connected");
   return cached.conn;
 }
 

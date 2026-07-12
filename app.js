@@ -4,11 +4,12 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
 const router = require('./routes');
-
+const { requestLogger, errorLogger } = require('./middleware/requestLogger');
 const sitemapRoute = require("./routes/sitemap");
 
 const app = express(); 
 app.set('trust proxy', 1);
+app.use(requestLogger);
 
 // parse urlencoded
 app.use(express.urlencoded({ extended: true }));
@@ -77,5 +78,6 @@ app.use('/api', require('./routes/mediaRoute'));
 
 // Health
 app.get('/', (req, res) => res.send('✅ API is live!'));
+app.use(errorLogger);
 
 module.exports = app;

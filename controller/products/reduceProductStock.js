@@ -1,4 +1,5 @@
 const productModel = require("../../models/productModel");
+const logger = require("../../utils/logger");
 
 const reduceProductStock = async (req, res) => {
   try {
@@ -64,7 +65,14 @@ const reduceProductStock = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error("Stock update error:", err);
+     logger.error("stock_update_failed", {
+      requestId: req.requestId,
+      userId: req.userId,
+      productId: req.body?.productId,
+      errorName: err?.name,
+      errorMessage: err?.message,
+      errorStack: err?.stack,
+    });
     res.status(500).json({
       success: false,
       error: true,
