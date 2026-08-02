@@ -17,7 +17,7 @@ const addToCartSchema = new mongoose.Schema(
     image: String,
     price: Number, // 🆕 save to DB
     selling: Number, // 🆕 save to DB
-    productCodeNumber: Number,
+    productCodeNumber: String,
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",

@@ -14,7 +14,7 @@ const orderedItemSchema = new mongoose.Schema({
   image: String,
   // NOTE: In your payload, 'price' = selling * quantity
   price: Number,
-  productCodeNumber: Number,
+  productCodeNumber: String,
   itemStatus: {
     type: String,
     enum: ["Normal", "Return", "RConfirmed",  "ReturnComplete", "Reviewed", "Canceled"],
