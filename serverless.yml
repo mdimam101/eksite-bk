@@ -106,6 +106,7 @@ provider:
     GOOGLE_CLIENT_ID: ${env:GOOGLE_CLIENT_ID}
     MONGODB_URI: ${env:MONGODB_URI}
     OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+    TOKEN_SECRET_KEY: ${env:TOKEN_SECRET_KEY}
 
     # Public API client key
     PUBLIC_CLIENT_KEY: ${env:PUBLIC_CLIENT_KEY}
@@ -133,6 +134,11 @@ provider:
           Resource:
             - arn:aws:s3:::pyzara-product-images-806594971636-ap-southeast-1-an/products/*
             - arn:aws:s3:::pyzara-product-images-806594971636-ap-southeast-1-an/reviews/*
+        - Effect: Allow
+          Action:
+            - execute-api:ManageConnections
+          Resource:
+            - arn:aws:execute-api:${aws:region}:${aws:accountId}:*/@connections/*
 
 
     
@@ -169,6 +175,16 @@ functions:
       - httpApi:
           method: ANY
           path: /{proxy+}
+  websocketConnect:
+    handler: controller/websocket/connect.handler
+    events:
+      - websocket:
+          route: $connect
+  websocketDisconnect:
+    handler: controller/websocket/disconnect.handler
+    events:
+      - websocket:
+          route: $disconnect
 
 plugins:
   - serverless-offline

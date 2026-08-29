@@ -42,5 +42,5 @@ const couponSchema = new mongoose.Schema({
   deletedAt: { type: Date, default: null },
 }, { timestamps: true });
 
-couponSchema.index({ code: 1 }, { unique: true });
+// couponSchema.index({ code: 1 }, { unique: true }); 8.0.1
 module.exports = mongoose.model("coupon", couponSchema);

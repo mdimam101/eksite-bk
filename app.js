@@ -75,6 +75,9 @@ app.use('/api', require('./routes/aiSkincareRoute'));
 // Private S3 media upload routes
 app.use('/api', require('./routes/mediaRoute'));
 
+// Human customer support chat routes
+app.use('/api', require('./routes/chatRoute'));
+app.use('/api', require('./routes/adminChatRoute'));
 
 // Health
 app.get('/', (req, res) => res.send('✅ API is live!'));

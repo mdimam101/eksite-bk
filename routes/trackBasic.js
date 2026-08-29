@@ -12,6 +12,7 @@ const ALLOWED = new Set([
   'search',
   'product_view',
   'add_to_cart',
+  'checkout',
   'order_confirm',
 ]);
 
@@ -29,6 +30,7 @@ function buildKey({ metric, date, subCategory, term }) {
  *  { "type":"search", "term":"air max" }
  *  { "type":"product_view", "subCategory":"men-shoes" }
  *  { "type":"add_to_cart", "subCategory":"men-shoes", "count":3 }
+ *  { "type":"checkout", "count":3 } // 1 checkout visit + 3 checkout items
  *  { "type":"order_confirm", "subCategory":"men-shoes", "count":5 }
  */
 router.post('/track-basic', async (req, res) => {
@@ -77,6 +79,25 @@ router.post('/track-basic', async (req, res) => {
       { upsert: true }
     );
 
+    // A checkout call records two separate values: page visits and item volume.
+    // The checkout counter above always increments by one, while this counter
+    // increments by the number of selected items sent by the frontend.
+    if (type === 'checkout') {
+      const requestedCount = Number(req.body?.count);
+      const itemCount = Number.isFinite(requestedCount) && requestedCount >= 0
+        ? Math.floor(requestedCount)
+        : 0;
+      const itemDoc = { ...doc, metric: 'checkout_items' };
+      const itemKey = buildKey(itemDoc);
+
+      await AnalyticsCounter.updateOne(
+        { key: itemKey },
+        { $setOnInsert: { ...itemDoc, key: itemKey }, $inc: { count: itemCount } },
+        { upsert: true }
+      );
+    }
+
+
     res.json({ success: true });
   } catch (e) {
     console.error('track-basic error:', e);
@@ -102,11 +123,17 @@ router.get('/analytics-basic/summary', async (req, res) => {
   res.json({ success: true, from, to, metrics: rows });
 });
 
-/** 2) SubCategory-wise totals (category_click, product_view, add_to_cart, order_confirm) */
+/** 2) SubCategory-wise totals, including checkout visits and item volume. */
 router.get('/analytics-basic/subcategory', async (req, res) => {
   const { from, to } = parseRange(req);
-  const metrics = ['category_click', 'product_view', 'add_to_cart', 'order_confirm', ];
-
+ const metrics = [
+    'category_click',
+    'product_view',
+    'add_to_cart',
+    'checkout',
+    'checkout_items',
+    'order_confirm'
+  ];
   const rows = await AnalyticsCounter.aggregate([
     { $match: { date: { $gte: from, $lte: to }, metric: { $in: metrics } } },
     { $group: { _id: { metric: '$metric', subCategory: '$subCategory' }, count: { $sum: '$count' } } },
@@ -134,7 +161,7 @@ router.get('/analytics-basic/search-top', async (req, res) => {
 /** 4) Time series by day/week/month/year (supports optional ?subCategory=) */
 router.get('/analytics-basic/timeseries', async (req, res) => {
   const { from, to } = parseRange(req);
-  const metrics = (req.query.metrics || 'add_to_cart,order_confirm')
+  const metrics = (req.query.metrics || 'add_to_cart,checkout,checkout_items,order_confirm')
     .split(',').map(s => s.trim()).filter(Boolean);
 
   const by = (req.query.by || 'day').toLowerCase();

@@ -4,10 +4,10 @@ const userModel = require("../../models/userModel");
 async function updateShipping(req, res) {
   try {
     // req.userId provided by authToken middleware
-    const { name, phone, address, district, upazila } = req.body;
+    const { name, phone, address, district } = req.body;
 
     // basic guard
-    if (!name || !phone || !address || !district || !upazila) {
+    if (!name || !phone || !address || !district) {
       return res.status(400).json({
         success: false,
         error: true,
@@ -17,7 +17,7 @@ async function updateShipping(req, res) {
 
     const updated = await userModel.findByIdAndUpdate(
       req.userId,
-      { $set: { shipping: { name, phone, address, district, upazila } } },
+      { $set: { shipping: { name, phone, address, district } } },
       { new: true }
     ).select("shipping");
 

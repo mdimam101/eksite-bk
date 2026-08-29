@@ -6,7 +6,6 @@ const shippingSchema = new mongoose.Schema({
   phone: String,
   address: String,
   district: String,
-  upazila: String,
 }, { _id: false })
 
 const userSchema = new mongoose.Schema({

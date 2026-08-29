@@ -41,7 +41,7 @@ const getProductDetails = async (req, res) => {
 
     // ✅ fetch (optionally select a projection)
     const product = await productModel
-      .findfindOne({ _id: productId, isPublished: true })
+      .findOne({ _id: productId, isPublished: true })
       // .select("-__v") // <- চাইলে __v বাদ দিতে পারো
       .lean();
 

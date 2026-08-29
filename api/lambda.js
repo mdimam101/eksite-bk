@@ -14,14 +14,14 @@ const serverless = require('serverless-http');
 const app = require('../app');
 const connectDB = require('../config/db');
 
-let cachedHandler;
+const cachedHandler = serverless(app);
 
 exports.handler = async (event, context) => {
   // Ensure DB is connected once per container
   await connectDB();
 
   
-    cachedHandler = serverless(app);
+    // cachedHandler = serverless(app);
   
   return cachedHandler(event, context);
 };

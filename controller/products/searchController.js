@@ -1,19 +1,42 @@
 const productModel = require("../../models/productModel");
+const {
+  SEARCH_FIELDS,
+  normalizeSearchText,
+  phraseRegex,
+  tokenFilter,
+  rankProducts,
+} = require("../../utils/productSearch");
 
 const searchProduct = async (req, res) => {
-  const q = req.query.q;
-
-  // console.log("query---------", q);
-  
+  const q = normalizeSearchText(req.query.q);
 
   try {
-    const products = await productModel.find({
-      isPublished: true,
-        $or: [
-          { productName: { $regex: q, $options: "i" } }, // productName এর মধ্যে সার্চ
-          { category: { $regex: q, $options: "i" } }     // category এর মধ্যে সার্চ
-        ],
+    if (!q) {
+      return res.json({
+        message: "Search query is required",
+        data: [],
+        error: false,
+        success: true,
       });
+    }
+
+    const exactPhrase = phraseRegex(q);
+    const phraseMatches = await productModel.find({
+      isPublished: true,
+      $or: SEARCH_FIELDS.map((field) => ({ [field]: exactPhrase })),
+    });
+
+    // Only use the broader word-based fallback when the complete phrase is
+    // absent. For example, "face cleanser" can still find "Facewash" through
+    // the shared word "face".
+    let products = phraseMatches;
+    if (products.length === 0) {
+      const candidates = await productModel.find({
+        isPublished: true,
+        ...tokenFilter(q),
+      }).limit(200);
+      products = rankProducts(candidates, q);
+    }
 
     res.json({
       message: 'get product details',
@@ -32,5 +55,4 @@ const searchProduct = async (req, res) => {
   }
 };
 
-module.exports = searchProduct
-
+module.exports = searchProduct;

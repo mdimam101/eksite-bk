@@ -34,7 +34,6 @@ const orderSchema = new mongoose.Schema(
       phone: String,
       address: String,
       district: String,
-      upazila: String,
     },
     deliveryType: String,        // "Express" | "Normal"
     deliveryCharge: Number,

@@ -9,6 +9,7 @@ const userLogout = require('../controller/users/userLogout')
 const allUsers = require('../controller/users/allUsers')
 const uploadProductController = require('../controller/products/uploadProduct')
 const getAllProduct = require('../controller/products/getAllProduct')
+const getProductCards = require('../controller/products/getProductCards')
 const updateProduct = require('../controller/products/updateProduct')
 const getCategoryProductOne = require('../controller/products/getCategoryProductOne')
 const getCategoryWishProduct = require('../controller/products/getCategoryWishProduct')
@@ -60,6 +61,8 @@ const getUserById = require('../controller/users/getUserById');
 const { updateUserPoint, getUserPoint } = require('../controller/users/userPointController');
 const publicApiProtection = require('../middleware/publicApiProtection')
 const getAppVersion = require('../controller/appVersion/getAppVersion')
+const getTrendingProductCards = require('../controller/products/getTrendingProductCards')
+const getSlideCards = require('../controller/products/getSlideCards')
 
 router.get('/app-version', getAppVersion);
 
@@ -99,6 +102,14 @@ router.post('/upload-product', uploadProductController)
 // get all product
 router.get('/get-product',publicApiProtection, getAllProduct) // No need auth check
 
+// Home page category sliders (priority 1-12, first variant only)
+router.get('/get-slide-cards', publicApiProtection, getSlideCards)
+
+// Lightweight, paginated product list for homepage cards and infinite scrolling.
+router.get('/product-cards', publicApiProtection, getProductCards)
+// Lightweight trending-only list; all trending products are returned together.
+router.get('/trending-product-cards', publicApiProtection, getTrendingProductCards)
+
 // update product
 router.post('/update-product', updateProduct)
 
@@ -115,8 +126,8 @@ router.post('/category-wish-product',publicApiProtection,  getCategoryWishProduc
 
 // get product details
 router.post('/product-details',publicApiProtection,  getProductDetails)
-router.get('/product-details',publicApiProtection,  getProductDetails);  //optionall
-router.get('/product-details/:productId',publicApiProtection,  getProductDetails); // GET /:id  (optional)
+router.get('/product-details',  getProductDetails);  //optionall
+router.get('/product-details/:productId',  getProductDetails); // GET /:id  (optional)
 
 // user add to cart
 router.post('/addtocart',authToken, addToCartController)

@@ -23,7 +23,6 @@ module.exports = async function deleteAccount(req, res) {
           "shippingDetails.phone": "",
           "shippingDetails.address": "",
           "shippingDetails.district": "",
-          "shippingDetails.upazila": "",
           userDeletedAt: new Date(),
         },
         $unset: { userId: "" },
