@@ -1,4 +1,5 @@
 const productModel = require("../../models/productModel");
+const { sortProductsByPriority } = require("../../utils/productPriority");
 
 const getCategoryWishProduct = async (req, res) => {
     try {
@@ -17,7 +18,8 @@ const getCategoryWishProduct = async (req, res) => {
           query.subCategory = { $regex: new RegExp(`^${subCategory}$`, 'i') };
       }
 
-      const product = await productModel.find(query);
+      const product = await productModel.find(query).lean();
+      sortProductsByPriority(product);
         res.json({
             message: 'get category wise product',
             data: product,

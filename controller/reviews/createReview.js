@@ -32,6 +32,14 @@ async function recomputeProductRating(productId) {
   });
 }
 
+function getReviewUserName(userDoc) {
+  const accountName = userDoc?.name?.trim();
+  const shippingName = userDoc?.shipping?.name?.trim();
+
+  return accountName || shippingName || "Anonymous";
+}
+
+
 const createReview = async (req, res) => {
   try {
     const userId = req.userId;
@@ -126,11 +134,10 @@ const createReview = async (req, res) => {
     let userName = "Anonymous";
 
     if (userId) {
-      const userDoc = await UserModel.findById(userId).select("name");
-
-      if (userDoc?.name) {
-        userName = userDoc.name;
-      }
+      const userDoc = await UserModel.findById(userId)
+        .select("name shipping.name")
+        .lean();
+      userName = getReviewUserName(userDoc);
     }
 
     // Same order item e only one review
