@@ -1,5 +1,7 @@
 // async function userLogout(req, res) {
 
+const { getAuthCookieClearOptions } = require("../../utils/authCookie");
+
 //     try {
 //         res.clearCookie('token')
 //         res.json({
@@ -24,20 +26,22 @@
 
 async function userLogout(req, res) {
   try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-    });
+    // res.clearCookie("token", {
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "none",
+    //   path: "/",
+    // });
 
-    res.cookie("token", "", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-      expires: new Date(0),
-    });
+    // res.cookie("token", "", {
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "none",
+    //   path: "/",
+    //   expires: new Date(0),
+    // });
+    const cookieOptions = getAuthCookieClearOptions(req);
+    res.clearCookie("token", cookieOptions)
 
     return res.json({
       message: "Logged out successfully",

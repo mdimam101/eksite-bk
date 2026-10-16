@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const UserModel = require("../../models/userModel");
 const logger = require("../../utils/logger");
+const { getAuthCookieOptions } = require("../../utils/authCookie");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -81,13 +82,14 @@ async function googleLoginController(req, res) {
       expiresIn: "365d",
     });
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-      maxAge: 365 * 24 * 60 * 60 * 1000,
-    });
+    // res.cookie("token", token, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "none",
+    //   path: "/",
+    //   maxAge: 365 * 24 * 60 * 60 * 1000,
+    // });
+     res.cookie("token", token, getAuthCookieOptions(req));
 
     return res.status(200).json({
       success: true,

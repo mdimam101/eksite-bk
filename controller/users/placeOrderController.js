@@ -1,4 +1,5 @@
 const OrderModel = require("../../models/OrderModel");
+const { getPurchaseEventId, trackPurchaseSafely } = require("../../services/metaPurchase");
 const logger = require("../../utils/logger");
 
 
@@ -18,6 +19,9 @@ const placeOrderController = async (req, res) => {
       appliedCoupon, // optional: থাকলে সেভ করব
       // Premium request from checkout
       subscriptionRequest,
+      // Web sends Meta attribution.
+      // Mobile app may not send it yet.
+      meta = {},
     } = req.body || {};
 
     if (!items?.length) {
@@ -47,6 +51,7 @@ const placeOrderController = async (req, res) => {
     }
 
     const savedOrder = await OrderModel.create(payload);
+    const metaEventId = getPurchaseEventId(savedOrder._id);
 
      logger.info("order_created", {
       requestId: req.requestId,
@@ -55,11 +60,22 @@ const placeOrderController = async (req, res) => {
       itemCount: savedOrder?.items?.length,
     });
 
+    // Pyzara currently has a Business-connected managed CAPI integration.
+    // Keep direct production CAPI disabled until that integration is reviewed/
+    // disabled, otherwise duplicate server Purchase events may be generated.
+    await trackPurchaseSafely({
+      order: savedOrder,
+      userId: currentUser,
+      meta,
+      request: req,
+    });
+
     return res.json({
       message: "Order placed successfully.",
       data: savedOrder,
       error: false,
       success: true,
+      metaEventId,
     });
 
   } catch (err) {

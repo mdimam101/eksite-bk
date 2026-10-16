@@ -108,6 +108,12 @@ provider:
     OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     TOKEN_SECRET_KEY: ${env:TOKEN_SECRET_KEY}
 
+      # Direct Meta CAPI is opt-in. Keep disabled while the managed integration is active.
+    META_PIXEL_ID: ${env:META_PIXEL_ID, ''}
+    META_CAPI_ACCESS_TOKEN: ${env:META_CAPI_ACCESS_TOKEN, ''}
+    META_GRAPH_API_VERSION: ${env:META_GRAPH_API_VERSION, ''}
+    META_CAPI_ENABLED: ${env:META_CAPI_ENABLED, 'false'}
+
     # Public API client key
     PUBLIC_CLIENT_KEY: ${env:PUBLIC_CLIENT_KEY}
 

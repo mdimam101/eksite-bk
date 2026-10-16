@@ -63,6 +63,14 @@ const productSchema = mongoose.Schema(
       default: true,
     },
 
+     // Main image displayed with the product description.
+    describedImgUrl: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+
     // 🔽🔽 top-of-details page video support
     productVideo: {
       url: { type: String, default: "" }, // direct mp4/hls link OR YouTube/Vimeo page link OR Cloudinary url

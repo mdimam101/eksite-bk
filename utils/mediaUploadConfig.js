@@ -17,6 +17,7 @@ const MIME_CONFIG = Object.freeze({
 
 const MEDIA_TYPES = Object.freeze({
   "product-image": { root: "products", folder: "original", kind: "image", requiresAdmin: true },
+  "description-image": { root: "products", folder: "description", kind: "image", requiresAdmin: true },
   "product-video": { root: "products", folder: "video", kind: "video", requiresAdmin: true },
   "video-thumbnail": { root: "products", folder: "thumbnail", kind: "image", requiresAdmin: true },
  "review-image": {
@@ -99,7 +100,7 @@ function validateProductMediaKey(key) {
   if (key.includes("//") || key.split("/").some(segment => segment.trim() === "")) {
     return { ok: false, message: "Invalid media key" };
   }
-  const allowed = /^products\/[A-Za-z0-9_-]+\/(original|video|thumbnail)\/[A-Fa-f0-9-]+\.(jpg|jpeg|png|webp|heic|heif|mp4|webm|mov)$/;
+  const allowed = /^products\/[A-Za-z0-9_-]+\/(original|description|video|thumbnail)\/[A-Fa-f0-9-]+\.(jpg|jpeg|png|webp|heic|heif|mp4|webm|mov)$/;
   if (!allowed.test(key)) {
     return { ok: false, message: "Invalid media key" };
   } 

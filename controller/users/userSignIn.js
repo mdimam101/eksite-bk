@@ -2,6 +2,7 @@ const userModel = require("../../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const logger = require("../../utils/logger");
+const { getAuthCookieOptions } = require("../../utils/authCookie");
 
 async function userSignInController(req, res) {
   try {
@@ -33,12 +34,13 @@ async function userSignInController(req, res) {
           expiresIn: "365d",
         });
 
-        const tokenOption = {
-          httpOnly: true,
-          secure: false, // ✅ localhost এর জন্য false
-          sameSite: "None",
-        };
+        // const tokenOption = {
+        //   httpOnly: true,
+        //   secure: false, // ✅ localhost এর জন্য false
+        //   sameSite: "None",
+        // };
         // sameSite: "Lax", // ✅ Add this to allow cross-origin native er somue
+        const tokenOption = getAuthCookieOptions(req);
 
         res.cookie("token", token, tokenOption).status(200).json({
           message: "Login successfully",
@@ -58,11 +60,12 @@ async function userSignInController(req, res) {
       //   // শুধু deviceId দিয়ে নতুন guest ইউজার
       //   user = await new userModel({ deviceId, role: "GENEREL" }).save();
       // }
-      const tokenOption = {
-          httpOnly: true,
-          secure: false, // ✅ localhost এর জন্য false
-          sameSite: "None",
-        };
+      // const tokenOption = {
+      //     httpOnly: true,
+      //     secure: false, // ✅ localhost এর জন্য false
+      //     sameSite: "None",
+      //   };
+      const tokenOption = getAuthCookieOptions(req);
 
       const tokenData = { _id: user._id, deviceId: user.deviceId };
 

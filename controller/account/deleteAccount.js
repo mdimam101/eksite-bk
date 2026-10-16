@@ -3,6 +3,7 @@ const User = require("../../models/userModel");
 const Order = require("../../models/OrderModel");          // ← তোমার অর্ডার মডেলের নাম মিলাও
 const Cart = require("../../models/addToCartModel");     // ← Cart মডেল না থাকলে কমেন্ট করো
 const Review = require("../../models/reviewModel");        // ← Review মডেল না থাকলে কমেন্ট করো
+const { getAuthCookieClearOptions } = require("../../utils/authCookie");
 
 module.exports = async function deleteAccount(req, res) {
   try {
@@ -47,12 +48,14 @@ module.exports = async function deleteAccount(req, res) {
     await User.deleteOne({ _id: userId });
 
     // 5) auth কুকি ক্লিয়ার (SameSite/secure তোমার সেটআপ অনুযায়ী রাখো)
-    res.cookie("token", "", {
-      httpOnly: true,
-      sameSite: "none",
-      secure: true,
-      expires: new Date(0),
-    });
+    // res.cookie("token", "", {
+    //   httpOnly: true,
+    //   sameSite: "none",
+    //   secure: true,
+    //   expires: new Date(0),
+    // });
+    // 5) auth কুকি ক্লিয়ার
+    res.clearCookie("token", getAuthCookieClearOptions(req));
 
     return res.json({ success: true, message: "Account deleted" });
   } catch (err) {
