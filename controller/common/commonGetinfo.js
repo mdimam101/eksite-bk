@@ -3,10 +3,16 @@ const commonModel = require("../../models/commonModel");
 async function commonGetInfoController(req, res) {
   try {
     const getAllinfo = await commonModel.find();
-    // console.log("allProduct---",allProduct);
+    // Keep the existing array/order and other fields; expose active install settings.
+    const active = await require('../../services/installCampaign').settings();
     res.json({
       message: 'get all common info',
-      data : getAllinfo,
+      data : getAllinfo.map(row => ({ ...row.toObject(),
+        installCampaignEnabled: active?.installCampaignEnabled ?? false,
+        installRewardPoints: active?.installRewardPoints ?? 200,
+        firstOrderCampaignEnabled: active?.firstOrderCampaignEnabled ?? false,
+        firstOrderRewardPoints: active?.firstOrderRewardPoints ?? 300,
+      })),
       error : false,
       success : true
   })

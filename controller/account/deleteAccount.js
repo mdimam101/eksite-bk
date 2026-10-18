@@ -1,5 +1,6 @@
 // controllers/account/deleteAccount.js
 const User = require("../../models/userModel");
+const { rememberDevice } = require("../../services/installCampaign");
 const Order = require("../../models/OrderModel");          // ← তোমার অর্ডার মডেলের নাম মিলাও
 const Cart = require("../../models/addToCartModel");     // ← Cart মডেল না থাকলে কমেন্ট করো
 const Review = require("../../models/reviewModel");        // ← Review মডেল না থাকলে কমেন্ট করো
@@ -14,6 +15,11 @@ module.exports = async function deleteAccount(req, res) {
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
+
+    // Retain device history before removing any account data, including legacy accounts.
+    const deletingUser = await User.findById(userId);
+    await rememberDevice(deletingUser);
+    await require('../../services/firstOrderCampaign').rememberDeletedAccountHistory(deletingUser);
 
     // 1) Orders: user PII অ্যানোনিমাইজ + userId আনসেট (অ্যাকাউন্টিংয়ের জন্য অর্ডার রেখে দিচ্ছি)
     await Order.updateMany(

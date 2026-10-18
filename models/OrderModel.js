@@ -25,6 +25,13 @@ const orderedItemSchema = new mongoose.Schema({
 const orderSchema = new mongoose.Schema(
   {
     items: [orderedItemSchema],
+    // Absent on website orders so their existing flow/envelope remains unchanged.
+    firstOrderReward: { type: new mongoose.Schema({
+      eligible: { type: Boolean, default: false },
+      rewardPoints: { type: Number, default: 0, min: 0, validate: Number.isSafeInteger },
+      status: { type: String, enum: ['not_eligible', 'pending', 'approved', 'rejected'], default: 'not_eligible' },
+      requestedAt: Date, reviewedAt: Date, reviewedBy: mongoose.Schema.Types.ObjectId,
+    }, { _id: false }), default: undefined },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",

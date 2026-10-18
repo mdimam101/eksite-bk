@@ -115,7 +115,7 @@ router.get('/trending-product-cards', publicApiProtection, getTrendingProductCar
 router.post('/update-product', updateProduct)
 
 // common upload info
-router.post('/upload-common-info', commonUploadInfoController)
+router.post('/upload-common-info', require('../middleware/installCampaignSettingsAuth'), commonUploadInfoController)
 
 // common get info
 router.get('/get-common-info', commonGetInfoController)
@@ -148,6 +148,7 @@ router.post("/upload-banner", authToken, uploadBanner);
 router.delete('/delete-banner', deleteBanner)
 // order
 router.post("/orders", authToken, placeOrderController);
+router.use(require("./firstOrderRewardRoute"));
 router.put("/reduce-stock", reduceProductStock);
 
 // Sob order gula fetch korar route (admin access only)

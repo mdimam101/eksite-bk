@@ -1,8 +1,16 @@
 const userModel = require("../../models/userModel");
+const { createAccount } = require("../../services/installCampaign");
 
 async function userSignUpController(req, res) {
   try {
-    const { email, password, name, deviceId } = req.body;
+    const { email, password, name, deviceId, clientPlatform } = req.body;
+    // Preserve existing signup fields, but never accept client point/grant/account IDs.
+    const registrationData = { ...req.body };
+    delete registrationData.point;
+    delete registrationData.installRewardGranted;
+    delete registrationData._id;
+    delete registrationData.clientPlatform;
+    for (const field of ['hasPlacedFirstOrder', 'firstOrderRewardGranted', 'firstOrderHistoryVerified', 'firstOrderCampaignVersion']) delete registrationData[field];
 
     if (!deviceId) {
       const user = await userModel.findOne({ email });
@@ -35,17 +43,17 @@ async function userSignUpController(req, res) {
       }
 
       const payload = {
-        ...req.body,
+        ...registrationData,
         role: "GENERAL",
         password: hashPassword,
       };
 
       //every time user new register get email,name,password from body
-      const userData = new userModel(payload);
-      const saveUser = await userData.save();
+      const { user: saveUser, installReward } = await createAccount(payload, clientPlatform);
 
       res.status(201).json({
         data: saveUser,
+        installReward,
         success: true,
         error: false,
         message: "User created successfully",

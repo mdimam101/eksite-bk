@@ -50,7 +50,11 @@ const placeOrderController = async (req, res) => {
       payload.appliedCoupon = appliedCoupon; // { code, type, discount } পাঠালে সেভ হবে
     }
 
-    const savedOrder = await OrderModel.create(payload);
+    // Website/older callers execute the original order path, without campaign lookups or writes.
+    const isApp = req.body?.clientPlatform === 'android' || req.body?.clientPlatform === 'ios';
+    const savedOrder = isApp
+      ? await require('../../services/firstOrderCampaign').placeAppOrder(payload, req.body.deviceId)
+      : await OrderModel.create(payload);
     const metaEventId = getPurchaseEventId(savedOrder._id);
 
      logger.info("order_created", {
@@ -73,6 +77,7 @@ const placeOrderController = async (req, res) => {
     return res.json({
       message: "Order placed successfully.",
       data: savedOrder,
+       ...(isApp ? { firstOrderReward: savedOrder.firstOrderReward } : {}),
       error: false,
       success: true,
       metaEventId,
@@ -86,7 +91,7 @@ const placeOrderController = async (req, res) => {
       errorMessage: err?.message,
       errorStack: err?.stack,
     });
-    return res.status(500).json({
+    return res.status(err.status || 500).json({
       message: err?.message || "Server Error",
       error: true,
       success: false,

@@ -49,6 +49,12 @@ const userSchema = new mongoose.Schema({
 
   // ✅ shipping
   shipping: shippingSchema,
+  hasPlacedFirstOrder: { type: Boolean, default: false },
+  firstOrderRewardGranted: { type: Boolean, default: false },
+  // New accounts have known-empty history; old unknown/deleted history is not eligibility proof.
+  firstOrderHistoryVerified: { type: Boolean, default: false },
+  firstOrderCampaignVersion: { type: Number, default: 0 },
+  installRewardGranted: { type: Boolean, default: false },
   // Lifetime point balance. Points do not expire.
   point: {
     type: Number,

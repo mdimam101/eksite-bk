@@ -5,7 +5,13 @@ async function commonUploadInfoController(req, res) {
     // const sessionUserId = req.userId
     // if (uploadProductPermission(sessionUserId)) { throw new Error('Permission denied') }
 
-    const commonInfo = new commonModel(req.body); // productVideo will be accepted as-is
+    const active = await require('../../services/installCampaign').settings();
+    const commonInfo = new commonModel({ ...req.body,
+      installCampaignEnabled: req.body.installCampaignEnabled ?? active?.installCampaignEnabled ?? false,
+      installRewardPoints: req.body.installRewardPoints ?? active?.installRewardPoints ?? 200,
+      firstOrderCampaignEnabled: req.body.firstOrderCampaignEnabled ?? active?.firstOrderCampaignEnabled ?? false,
+      firstOrderRewardPoints: req.body.firstOrderRewardPoints ?? active?.firstOrderRewardPoints ?? 300,
+    }); // productVideo will be accepted as-is
     const saveCommonInfo = await commonInfo.save();
 
     res.status(201).json({

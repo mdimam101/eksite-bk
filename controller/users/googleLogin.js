@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const UserModel = require("../../models/userModel");
+const { createAccount, rememberDevice } = require("../../services/installCampaign");
 const logger = require("../../utils/logger");
 const { getAuthCookieOptions } = require("../../utils/authCookie");
 
@@ -8,7 +9,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 async function googleLoginController(req, res) {
   try {
-    const { credential } = req.body || {};
+    const { credential, deviceId, clientPlatform } = req.body || {};
 
     if (!credential) {
       return res.status(400).json({
@@ -35,14 +36,14 @@ async function googleLoginController(req, res) {
 
     const { sub: googleId, email, name, picture, email_verified } = payload;
 
-     logger.warn("authentication_failed", {
+    if (!email_verified) {
+      logger.warn("authentication_failed", {
         requestId: req.requestId,
         method: req.method,
         path: req.originalUrl || req.url,
         reason: "google_email_not_verified",
       });
 
-    if (!email_verified) {
       return res.status(400).json({
         success: false,
         error: true,
@@ -54,14 +55,23 @@ async function googleLoginController(req, res) {
       $or: [{ email }, { googleId }],
     });
 
+    let installReward = { granted: false, points: 0 };
     if (!user) {
-      user = await UserModel.create({
-        name: name || "Google User",
-        email: email || undefined,
-        googleId,
-        profilePic: picture || "",
-        role: "GENERAL",
-      });
+        try {
+        // Keep campaign evidence separate from legacy deviceId-based guest login.
+        const created = await createAccount({
+          name: name || "Google User", email: email || undefined,
+          googleId, profilePic: picture || "", role: "GENERAL",
+        }, clientPlatform, deviceId);
+        user = created.user;
+        installReward = created.installReward;
+      } catch (error) {
+        // Concurrent first Google logins may race the unique email/googleId index.
+        // The existing committed account can log in, but never gets a second grant.
+        user = await UserModel.findOne({ $or: [{ email }, { googleId }] });
+        if (!user) throw error;
+        if (deviceId) await rememberDevice({ _id: user._id, deviceId, installRewardGranted: false });
+      }
     } else {
       if (name) user.name = name;
       if (email) user.email = email;
@@ -70,6 +80,7 @@ async function googleLoginController(req, res) {
       if (!user.role) user.role = "GENERAL";
 
       await user.save();
+      if (deviceId) await rememberDevice({ _id: user._id, deviceId, installRewardGranted: false });
     }
 
     const tokenData = {
@@ -96,6 +107,7 @@ async function googleLoginController(req, res) {
       error: false,
       message: "Google login successful",
       data: token,
+      installReward,
       user: {
         _id: user._id,
         name: user.name,
@@ -104,6 +116,10 @@ async function googleLoginController(req, res) {
         profilePic: user.profilePic || "",
         phone: user.phone || "",
         shipping: user.shipping || null,
+        point: user.point || 0,
+        installRewardGranted: user.installRewardGranted === true,
+        hasPlacedFirstOrder: user.hasPlacedFirstOrder === true,
+        firstOrderRewardGranted: user.firstOrderRewardGranted === true,
       },
     });
   } catch (error) {
