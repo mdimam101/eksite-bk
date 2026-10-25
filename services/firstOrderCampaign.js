@@ -24,6 +24,10 @@ async function lockUser(userId, session) {
 }
 async function placeAppOrder(payload, deviceId) {
   if (!payload.userId) throw failure('Login required', 401);
+  const usedPoint = payload.usedPoint === undefined ? 0 : payload.usedPoint;
+  if (!Number.isSafeInteger(usedPoint) || usedPoint < 0) {
+    throw failure('usedPoint must be a non-negative safe integer', 400);
+  }
   // Missing/unsupported device evidence cannot earn, but does not block checkout.
   let key;
   if (deviceId != null && deviceId !== '') {
@@ -31,15 +35,25 @@ async function placeAppOrder(payload, deviceId) {
   }
   return atomic(async session => {
     const user = await lockUser(payload.userId, session);
+    // The user write above serializes concurrent checkouts. Keep the debit and
+    // order in this transaction so a failed order cannot consume points.
+    if (usedPoint > 0) {
+      if (!Number.isFinite(user.point) || user.point < usedPoint) {
+        throw Object.assign(failure('আপনার পর্যাপ্ত পয়েন্ট নাই। বিস্তারিত জানার জন্য যোগাযোগ করুন।', 409), {
+          code: 'INSUFFICIENT_POINTS',
+        });
+      }
+      user.point -= usedPoint;
+    }
     const previousOrder = await Order.exists({ userId: user._id }).session(session);
     const placed = user.hasPlacedFirstOrder || user.firstOrderRewardGranted || previousOrder || !user.firstOrderHistoryVerified;
     const common = await Common.findOne().sort({ createdAt: -1, _id: -1 }).session(session);
     let device = key ? await Device.findOne({ deviceKey: key }).session(session) : null;
     const alreadyClaimed = device?.firstOrderRewardClaimed === true;
-    const points = common?.firstOrderRewardPoints ?? 300;
+    const points = common?.firstOrderRewardPoints;
     const eligible = !placed && !!key && !alreadyClaimed && common?.firstOrderCampaignEnabled === true && Number.isSafeInteger(points) && points > 0;
     const request = { eligible, rewardPoints: eligible ? points : 0, status: eligible ? 'pending' : 'not_eligible', ...(eligible ? { requestedAt: new Date() } : {}) };
-    const [order] = await Order.create([{ ...payload, firstOrderReward: request }], { session });
+    const [order] = await Order.create([{ ...payload, usedPoint, firstOrderReward: request }], { session });
     user.hasPlacedFirstOrder = true;
     await user.save({ session });
     // Reserve the device even when OFF/ineligible: deleting an account never makes its first order new.

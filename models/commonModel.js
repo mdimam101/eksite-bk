@@ -14,6 +14,30 @@ const commonSchema = new mongoose.Schema({
     firstOrderCampaignEnabled: { type: Boolean, default: false },
     firstOrderRewardPoints: { type: Number, default: 300, min: 0, validate: Number.isSafeInteger },
     installRewardPoints: { type: Number, default: 200, min: 0, validate: Number.isSafeInteger },
+    redemption: {
+  firstOrderPercent: {
+    type: Number,
+    default: 5,
+    min: 0,
+    max: 100,
+  },
+  subsequentOrderPercent: {
+    type: Number,
+    default: 2,
+    min: 0,
+    max: 100,
+  },
+  maxPointsPerItem: {
+    type: Number,
+    default: 150,
+    min: 0,
+  },
+  maxPointsPerOrder: {
+    type: Number,
+    default: 250,
+    min: 0,
+  },
+},
 
 }, {
   timestamps: true

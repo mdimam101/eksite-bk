@@ -25,8 +25,8 @@ async function createAccount(payload, clientPlatform, campaignDeviceId = payload
         if (existingDeviceAccount && payload.deviceId) throw new Error('Already user exist');
         const known = await Device.findOne({ deviceKey: key }).session(session);
         const common = await Common.findOne().sort({ createdAt: -1, _id: -1 }).session(session);
-        const amount = common?.installRewardPoints ?? 200;
-        const granted = isApp && !known && !existingDeviceAccount && common?.installCampaignEnabled === true && Number.isSafeInteger(amount) && amount > 0;
+        const amount = common?.installRewardPoints;
+        const granted = isApp && !known && !existingDeviceAccount && common?.installCampaignEnabled === true
         const [user] = await User.create([{ ...safe, point: granted ? amount : 0, installRewardGranted: granted }], { session });
         // Record even campaign-OFF registrations, so deleting an old account does not make a device new.
         if (!known) await Device.create([{ deviceKey: key, userId: existingDeviceAccount?._id || user._id, rewardGranted: granted, rewardPoints: granted ? amount : 0 }], { session });

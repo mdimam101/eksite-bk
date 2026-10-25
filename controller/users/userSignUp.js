@@ -61,13 +61,14 @@ async function userSignUpController(req, res) {
     } else if (deviceId) {
       // when login guest user
       const payload = {
-        ...req.body,
+        ...req.body,//...registrationData,
         role: "GENERAL",
       };
 
       //every time user new register get email,name,password from body
-      const userData = new userModel(payload);
-      const saveUser = await userData.save();
+        // const { user: saveUser, installReward } = await createAccount(payload, clientPlatform);12
+      const userData = new userModel(payload);//1
+      const saveUser = await userData.save();//2
 
       res.status(201).json({
         data: saveUser,

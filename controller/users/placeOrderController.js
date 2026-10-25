@@ -53,7 +53,7 @@ const placeOrderController = async (req, res) => {
     // Website/older callers execute the original order path, without campaign lookups or writes.
     const isApp = req.body?.clientPlatform === 'android' || req.body?.clientPlatform === 'ios';
     const savedOrder = isApp
-      ? await require('../../services/firstOrderCampaign').placeAppOrder(payload, req.body.deviceId)
+      ? await require('../../services/firstOrderCampaign').placeAppOrder({ ...payload, usedPoint: req.body.usedPoint }, req.body.deviceId)
       : await OrderModel.create(payload);
     const metaEventId = getPurchaseEventId(savedOrder._id);
 
@@ -93,7 +93,7 @@ const placeOrderController = async (req, res) => {
     });
     return res.status(err.status || 500).json({
       message: err?.message || "Server Error",
-      error: true,
+      ...(err.code === 'INSUFFICIENT_POINTS' ? { code: err.code } : {}),
       success: false,
     });
   }

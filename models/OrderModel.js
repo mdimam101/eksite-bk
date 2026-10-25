@@ -25,6 +25,9 @@ const orderedItemSchema = new mongoose.Schema({
 const orderSchema = new mongoose.Schema(
   {
     items: [orderedItemSchema],
+    // App checkout debit snapshot. Cancellation/returns do not refund points.
+    // Leave absent for website/legacy orders.
+    usedPoint: { type: Number, min: 0, validate: Number.isSafeInteger, default: undefined },
     // Absent on website orders so their existing flow/envelope remains unchanged.
     firstOrderReward: { type: new mongoose.Schema({
       eligible: { type: Boolean, default: false },
