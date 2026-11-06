@@ -38,6 +38,19 @@ const commonSchema = new mongoose.Schema({
     min: 0,
   },
 },
+  // Campaign Modal
+  campaingInfo: {
+    headingTitle: String,
+    Ptitle: String,
+    campaingIsOn: Boolean,
+  },
+
+  // Campaign Modal for apps 
+  campaingInfoForApps: {
+    headingTitle: String,
+    Ptitle: String,
+    campaingIsOn: Boolean,
+  },
 
 }, {
   timestamps: true
