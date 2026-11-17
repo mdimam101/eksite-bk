@@ -63,6 +63,7 @@ app.use("/", sitemapRoute);
 
 // Routes
 app.use('/api', router);
+app.use('/api', require('./routes/campaignPerformanceRoute'));
 // ⬇️ NEW: mount basic tracking routes
 app.use('/api', require('./routes/trackBasic'));
 
